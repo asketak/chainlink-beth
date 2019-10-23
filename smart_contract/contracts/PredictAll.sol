@@ -68,15 +68,16 @@ contract PredictMarket is ChainlinkClient {
 
  	function order( int price, int amount  ) public {
  		require ();
-
  	}
 
-
-
- 	function  () returns(bool res) internal {
-
+ 	// fulfill receives a uint256 data type
+ 	function fulfill(bytes32 _requestId, uint256 _price)
+ 	  public
+ 	  // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
+ 	  recordChainlinkFulfillment(_requestId)
+ 	{
+ 	  currentPrice = _price;
  	}
-
 
  	function finalize ( string auth_token) public {
 
