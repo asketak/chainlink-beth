@@ -2,58 +2,86 @@ pragma solidity 0.4.24;
 
 import "chainlink/contracts/ChainlinkClient.sol";
 
-// This is just a simple example of a coin-like contract.
-// It is not standards compatible and cannot be expected to talk to other
-// coin/token contracts. If you want to create a standards-compliant
-// token, see: https://github.com/ConsenSys/Tokens. Cheers!
-
-contract MetaCoin {
-	mapping (address => uint) balances;
-
-	event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-	constructor() public {
-		balances[tx.origin] = 10000;
-	}
-
-	function sendCoin(address receiver, uint amount) public returns(bool sufficient) {
-		if (balances[msg.sender] < amount) return false;
-		balances[msg.sender] -= amount;
-		balances[receiver] += amount;
-		emit Transfer(msg.sender, receiver, amount);
-		return true;
-	}
-
-	function getBalanceInEth(address addr) public view returns(uint){
-		return ConvertLib.convert(getBalance(addr),2);
-	}
-
-	function getBalance(address addr) public view returns(uint) {
-		return balances[addr];
-	}
-}
-
 /**
- * The PredictMarket contract is one market, where people can bet on outcome of some api
- */
-contract PredictMarket {
-	string public name = "How many tweets wil @potus post between 30.10 and 7.11";
-	string public api_path = "How many tweets wil @potus post between 30.10 and 7.11";
-	string public http_post_or_get = "GET";
-	string public post_data = "{  auth: PREDICTOR_AUTH_TOKEN}";
-	string public auth_token = "";
-	uint256 public market_finalize_after = 0;
+* The PredictMarket contract is one market, where people can bet on outcome of some api
+*/
 
-  	constructor(string _auth_token_hash) public {
-  		auth_token_hash = _auth_token_hash
+contract PredictMarket is ChainlinkClient {
+
+	address public owner 
+	modifier only_owner { require(msg.sender == owner); _; }
+
+ 	// Params for API request
+ 	struct ApiRequest{
+ 		string api_path ;
+ 		string http_post_or_get ;
+ 		string get_data ;
+ 		string post_data ;
+ 		string json_regex_string ;
+ 	}
+
+ 	struct Market{
+ 		string name ;
+ 		uint256 market_resolution_timestamp ;
+ 		ApiRequest request;
+ 	}
+
+ 	Market public market;
+
+ 	// api_path = "https://api.twitter.com/1.1/statuses/user_timeline.json?";
+ 	// http_post_or_get = "GET";
+ 	// get_data = "screen_name=potus";
+ 	// post_data = "{  key: 'value', key2: 'value'}";
+ 	// json_regex_string = ""
+ 	// name = "How many tweets wil @potus post between 30.10 and 7.11";
+ 	// market_resolution_timestamp = 0;
+
+ 	constructor( _name, _market_resolution_timestamp, _api_path , _http_post_or_get , _get_data , _post_data , _json_regex_string ) public {_
+ 		setPublicChainlinkToken();
+ 		owner = msg.sender;
+ 		market = Market({ 
+ 			name: _name,
+ 			market_resolution_timestamp: _market_resolution_timestamp,
+ 			request: ApiRequest({
+ 				api_path : _api_path,
+ 				http_post_or_get : _http_post_or_get,
+ 				get_data : _get_data,
+ 				post_data : _post_data,
+ 				json_regex_string : _json_regex_string 
+ 				})
+ 			});
+ 	}
+
+ 	mapping (address => uint) balances;
+ 	function deposit() public payable {balances[msg.sender]+=msg.value;}
+
+ 	struct Order {
+ 		uint amount;
+ 		uint price;
+ 		address owner;
+ 		uint filled;
+ 	}
+
+ 	struct OrderBookLevel {
 
  	}
 
-  	function finalize ( string auth_token) public {
+ 	function order( int price, int amount  ) public {
+ 		require ();
 
-  	
-  }
-  
+ 	}
 
 
-}
+
+ 	function  () returns(bool res) internal {
+
+ 	}
+
+
+ 	function finalize ( string auth_token) public {
+
+ 	}
+
+
+
+ }
