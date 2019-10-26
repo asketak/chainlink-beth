@@ -8,81 +8,111 @@ import "chainlink/contracts/ChainlinkClient.sol";
 
 contract PredictMarket is ChainlinkClient {
 
-	address public owner 
-	modifier only_owner { require(msg.sender == owner); _; }
+    address public owner 
+    modifier only_owner { require(msg.sender == owner); _; }
 
- 	// Params for API request
- 	struct ApiRequest{
- 		string api_path ;
- 		string http_post_or_get ;
- 		string get_data ;
- 		string post_data ;
- 		string json_regex_string ;
- 	}
+    // Params for API request to external resource
+    struct ApiRequest{
+        string apiPath; //"https://api.twitter.com/1.1/statuses/user_timeline.json?";
+        string httpPostOrGet; // "GET"
+        string getData; // "auth_key=xxx,ticker=gold
+        string postData; // { key: value, key2,value}
+        string jsonRegexString; // " results.prizes[0].open"
+        string resultType; // " "
+    }
 
- 	struct Market{
- 		string name ;
- 		uint256 market_resolution_timestamp ;
- 		ApiRequest request;
- 	}
+    // Properties for betting event
+    string name;
+    uint256 marketResolutionTimestamp;
+    ApiRequest request;
+    uint result;
+    uint[] possibleOutcomes;
 
- 	Market public market;
+    // Orderbook to trade each possible outcome
+    struct Order {
+        uint amount;
+        uint price;
+        address owner;
+        uint filled;
+    }
 
- 	// api_path = "https://api.twitter.com/1.1/statuses/user_timeline.json?";
- 	// http_post_or_get = "GET";
- 	// get_data = "screen_name=potus";
- 	// post_data = "{  key: 'value', key2: 'value'}";
- 	// json_regex_string = ""
- 	// name = "How many tweets wil @potus post between 30.10 and 7.11";
- 	// market_resolution_timestamp = 0;
-
- 	constructor( _name, _market_resolution_timestamp, _api_path , _http_post_or_get , _get_data , _post_data , _json_regex_string ) public {_
- 		setPublicChainlinkToken();
- 		owner = msg.sender;
- 		market = Market({ 
- 			name: _name,
- 			market_resolution_timestamp: _market_resolution_timestamp,
- 			request: ApiRequest({
- 				api_path : _api_path,
- 				http_post_or_get : _http_post_or_get,
- 				get_data : _get_data,
- 				post_data : _post_data,
- 				json_regex_string : _json_regex_string 
- 				})
- 			});
- 	}
-
- 	mapping (address => uint) balances;
- 	function deposit() public payable {balances[msg.sender]+=msg.value;}
-
- 	struct Order {
- 		uint amount;
- 		uint price;
- 		address owner;
- 		uint filled;
- 	}
-
- 	struct OrderBookLevel {
-
- 	}
-
- 	function order( int price, int amount  ) public {
- 		require ();
- 	}
-
- 	// fulfill receives a uint256 data type
- 	function fulfill(bytes32 _requestId, uint256 _price)
- 	  public
- 	  // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
- 	  recordChainlinkFulfillment(_requestId)
- 	{
- 	  currentPrice = _price;
- 	}
-
- 	function finalize ( string auth_token) public {
-
- 	}
+    mapping (uint => Order) OrderBook;
+    OrderBook[] orderbooks;
 
 
+    constructor( _name, _marketResolutionTimestamp, _apiPath , _httpPostOrGet , _getData
+       , _postData , _jsonRegexString, _possibleOutcomes ) public {_
+        setPublicChainlinkToken();
+        owner = msg.sender;
+        name: _name;
+        marketResolution_timestamp: _marketResolutionTimestamp;
+        possibleOutcomes: _possibleOutcomes;
 
- }
+        request: ApiRequest({
+            apiPath : _apiPath,
+            httpPostOrGet : _httpPostOrGet,
+            getData : _getData,
+            postData : _postData,
+            jsonRegexString : _jsonRegexString 
+            })
+
+        for (uint x = 0; x < possibleOutcomes.length; x++) {
+            OrderBook emptyOrderBook
+            Orderbooks.push(emptyOrderBook)
+        }
+
+    }
+
+    mapping (address => uint) ethBalances;
+
+    function deposit() public payable {ethBalances[msg.sender]+=msg.value;}
+    function() public payable {deposit();}
+
+    function withdraw(uint _amount) public {
+        require (_amount > ethBalances[msg.sender]);
+        ethBalances[msg.sender] -= _amount;
+        msg.sender.transfer(amount);
+    }
+
+    function order( uint price, uint amount  ) public {
+        require (price * amount > ethBalances[msg.sender]);
+
+
+    }
+
+
+    // fulfill receives a uint256 data type
+    function fulfill(bytes32 _requestId, uint256 _result)
+    public
+      // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
+      recordChainlinkFulfillment(_requestId)
+      {
+          result = _result;
+          update_balances(result) 
+      }
+
+
+      function finalize(address _oracle, bytes32 _jobId, uint256 _payment, string auth_token) 
+      public
+      onlyOwner
+      {
+
+        require (now > market_resolution_timestamp);
+
+    // newRequest takes a JobID, a callback address, and callback function as input
+    Chainlink.Request memory req = buildChainlinkRequest(_jobId, this, this.fulfill.selector);
+    // Adds a URL with the key "get" to the request parameters
+    req.add("get", "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD");
+    // Uses input param (dot-delimited string) as the "path" in the request parameters
+    req.add("path", "USD");
+    // Adds an integer with the key "times" to the request parameters
+    req.addInt("times", 100);
+    // Sends the request with the amount of payment specified to the oracle
+    sendChainlinkRequestTo(_oracle, req, _payment);
+}
+
+}
+
+
+
+}
