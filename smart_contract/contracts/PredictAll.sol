@@ -34,6 +34,7 @@ contract PredictMarket is ChainlinkClient {
         uint price;
         address owner;
         uint filled;
+        bool isBuy
     }
 
     mapping (uint => Order) OrderBook;
@@ -60,7 +61,6 @@ contract PredictMarket is ChainlinkClient {
             OrderBook emptyOrderBook
             Orderbooks.push(emptyOrderBook)
         }
-
     }
 
     mapping (address => uint) ethBalances;
@@ -74,10 +74,20 @@ contract PredictMarket is ChainlinkClient {
         msg.sender.transfer(amount);
     }
 
-    function order( uint price, uint amount  ) public {
-        require (price * amount > ethBalances[msg.sender]);
+
+    function buyOrder( uint price, uint amount, address owner  ) public {
+
+        require (price*amount > ethBalances[owner]);
+        
+
+    }
 
 
+    function order( uint price, uint amount, bool isBuy  ) public {
+        if isBuy:
+            buyOrder(price,amount,msg.sender)
+        else:
+            sellOrder(price,amount,msg.sender)
     }
 
 
