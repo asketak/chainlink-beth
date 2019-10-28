@@ -8,15 +8,11 @@ contract EventFactory {
         address add;
         uint timestamp;
     }
-    event Deposit(
-        address xxx,
-        uint yyy
-    );
     uint256[] tmp;
     
     ContractInfo[] public allContracts;
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
-       string _getData , string _postData , string _jsonRegexString ) public {
+     string _getData , string _postData , string _jsonRegexString ) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
             apiPath : _apiPath,
@@ -40,8 +36,11 @@ contract EventFactory {
         PredictEvent newContract = new PredictEvent();
         newContract.initialize(market);
 
-        emit Deposit(newContract, _marketResolutionTimestamp);
         allContracts.push(ContractInfo({add: newContract,timestamp:_marketResolutionTimestamp}));
     } 
+
+    function getAddressCount() public constant returns (uint) {
+        return allContracts.length;
+    }
 
 }
