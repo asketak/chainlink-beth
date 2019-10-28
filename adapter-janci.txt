@@ -1,0 +1,33 @@
+Adapter requirement:
+
+
+Vstup: json
+
+{
+    apiPath: "https://api.twitter.com/1.1/statuses/user_timeline.json?",
+    httpPostOrGet:  "GET",
+    getData: "auth_key=API_KEY_REPLACE,ticker=gold",
+    postData: { auth_key: "API_KEY_REPLACE", key2:"value"}
+    jsonRegexString: "results.prizes[0].open"
+    encryptedAPIAuthKey: "==TZ7ZUVPY7B2QWT5HUUMY0PDKEAJZ3AP130ZZGWVCBD415C..."
+}
+
+
+Posila post/get regquest dle httpPostOrGet s danymi Daty.
+encrypteAPIAuthKey je auth klic, ktery je zasifrovan verejnym klicem, zatimco privatni klic
+je idealne v .env, nebo klidne hardcoded.
+Privatnim klicem odsifrujes a vysledkem replacnes API_KEY_REPLACE v post/get datech
+
+jsonRegexString tohle je tricky, potreboval bych(od nejvyssi priority k nejmensi)
+Teckovou notaci vybrat konkretni hodnotu z jsonu: results.USDEUR.price
+Pro list pouzit length: results.tweets:length()
+
+Pouzit kombinaci filter a length, pro spocitani prvku s nejakou vlastnosti:
+=pro string, ><= pro inty
+
+results.tweets:timestamp>5000:length
+results.tweets:author="@realDonaldTrump":length
+
+vystup:
+Proste jednoduche cislo, pokud sluzba vratila error, tak nejakou magickou konstantu =  2^256-1
+Pokud regex string vybira z jsonu string, tak vrati string.
