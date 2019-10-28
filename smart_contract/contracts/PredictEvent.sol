@@ -30,10 +30,11 @@ contract PredictEvent is ChainlinkClient {
         uint unfilledSellOrdersPointer;
     }
 
+    address public myAddress;
     // market result -> price of asset -> orderbooklevel
     mapping(uint => mapping(uint => OrderbookLevel)) Orderbooks;
-    uint[] highest_limit_buy;
-    uint[] lowest_limit_sell;
+    uint[] public highest_limit_buy;
+    uint[] public lowest_limit_sell;
     Shared.Market public market;
         uint result;
 
@@ -138,17 +139,22 @@ contract PredictEvent is ChainlinkClient {
 
     }
 
+  constructor() public {
+    myAddress = address(this);
+    
+  }
+
     function placeSellOrder( uint _price, uint _amount, address _owner, uint result) public {
     }
 
 
     function initialize (Shared.Market _market ) public {
-        setPublicChainlinkToken;
+        // setPublicChainlinkToken;
         market = _market;
 
         for (uint x = 0; x < market.possibleOutcomes.length; x++) {
-            highest_limit_buy[x] = 0;
-            lowest_limit_sell[x] = 100;
+            highest_limit_buy.push(0);
+            lowest_limit_sell.push(100);
         }
     }
 
