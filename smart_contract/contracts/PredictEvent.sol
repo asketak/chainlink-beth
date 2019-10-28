@@ -1,7 +1,9 @@
 pragma solidity 0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "chainlink/contracts/ChainlinkClient.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "./Shared.sol";
 
 /**
 * The PredictEvent contract is one market, where people can bet on outcome of some api
@@ -9,21 +11,6 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract PredictEvent is ChainlinkClient {
 
-    // Params for API request to external resource
-    struct ApiRequest{
-        string apiPath; //"https://api.twitter.com/1.1/statuses/user_timeline.json?";
-        string httpPostOrGet; // "GET"
-        string getData; // "auth_key=xxx,ticker=gold
-        string postData; // { key: value, key2,value}
-        string jsonRegexString; // " results.prizes[0].open"
-    }
-
-    // Properties for betting event
-    string name;
-    uint256 public marketResolutionTimestamp;
-    ApiRequest request;
-    uint result;
-    uint[] possibleOutcomes;
 
 
     // Orderbook to trade each possible outcome
@@ -47,8 +34,10 @@ contract PredictEvent is ChainlinkClient {
     mapping(uint => mapping(uint => OrderbookLevel)) Orderbooks;
     uint[] highest_limit_buy;
     uint[] lowest_limit_sell;
+    Shared.Market public market;
+        uint result;
 
-    function placeBuyOrder( uint _price, uint _amount, address _owner) public {
+    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) public {
         // require(_price*_amount > ethBalances[_owner]);
         // ethBalances[_owner] =- _price * _amount ;
 
@@ -149,25 +138,15 @@ contract PredictEvent is ChainlinkClient {
 
     }
 
-    function placeSellOrder( uint _price, uint _amount, address _owner) public {
+    function placeSellOrder( uint _price, uint _amount, address _owner, uint result) public {
     }
 
-    constructor(string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet , string _getData
-     , string _postData , string _jsonRegexString, uint[] _possibleOutcomes ) public {
-        setPublicChainlinkToken;
-        address owner = msg.sender;
-        name= _name;
-        uint marketResolution_timestamp= _marketResolutionTimestamp;
-        possibleOutcomes= _possibleOutcomes;
 
-        ApiRequest memory request= ApiRequest({
-            apiPath : _apiPath,
-            httpPostOrGet : _httpPostOrGet,
-            getData : _getData,
-            postData : _postData,
-            jsonRegexString : _jsonRegexString 
-            });
-        for (uint x = 0; x < possibleOutcomes.length; x++) {
+    function initialize (Shared.Market _market ) public {
+        setPublicChainlinkToken;
+        market = _market;
+
+        for (uint x = 0; x < market.possibleOutcomes.length; x++) {
             highest_limit_buy[x] = 0;
             lowest_limit_sell[x] = 100;
         }
@@ -177,10 +156,10 @@ contract PredictEvent is ChainlinkClient {
         require (_price > 0 && _price < 100);
 
         if (_isBuy){
-            placeBuyOrder(_price,_amount,msg.sender);
+            placeBuyOrder(_price,_amount,msg.sender,result);
         }
         else{
-            placeSellOrder(_price,_amount,msg.sender);
+            placeSellOrder(_price,_amount,msg.sender,result);
         }
     }
 
@@ -192,13 +171,13 @@ contract PredictEvent is ChainlinkClient {
     recordChainlinkFulfillment(_requestId)
     {
         result = _result;
-        // update_balances(result);
+        //update_balances(result);
     }
 
     function finalize(address _oracle, bytes32 _jobId, uint256 _payment, string auth_token) 
     public
     {
-        require (now > marketResolutionTimestamp);
+        require (now > market.marketResolutionTimestamp);
 
     // newRequest takes a JobID, a callback address, and callback function as input
     Chainlink.Request memory req = buildChainlinkRequest(_jobId, this, this.fulfill.selector);
