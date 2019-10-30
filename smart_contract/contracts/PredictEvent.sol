@@ -37,18 +37,18 @@ contract PredictEvent is ChainlinkClient {
     function showOrder (uint a,uint b, uint c, bool isBuy) constant public returns(Order res) {
         if(isBuy){
             return Orderbooks[a][b].BuyOrdersQueue[c];
-        }else{
-            return Orderbooks[a][b].SellOrdersQueue[c];
+            }else{
+                return Orderbooks[a][b].SellOrdersQueue[c];
+            }
         }
-    }
-    
-    
-    function getOutcomes () constant public returns(Shared.Outcome[] res) {
-        return market.possibleOutcomes;
-    }
-    
 
-    
+
+        function getOutcomes () constant public returns(Shared.Outcome[] res) {
+            return market.possibleOutcomes;
+        }
+
+
+
     // market result -> price of asset -> orderbooklevel
     mapping(uint => mapping(uint => OrderbookLevel)) public Orderbooks;
     uint[] public highest_limit_buy;
@@ -57,14 +57,18 @@ contract PredictEvent is ChainlinkClient {
     uint public eventFinalResult;
     bool public finalized;
     bool public initialized;
-    mapping (address => uint) toPay;
+    mapping (address => uint) public toPay;
+    address[] public addressesToPay;
+    mapping (address => uint) public deposited;
+    address[] public depositedA;
+    
+
     bool locked;
     uint maximumBumberOfOrders; // to prevent stalling contract
     bytes32 CHAINLINKERRORCONST = bytes32("CHAINLING NODE ERROR"); // magical value, returned by adapter when error occurs
     
     uint constant weekInSeconds = 7*24*3600;
     address finalizer;
-    address[] addressesToPay;
     
     constructor() public {
     }
@@ -108,21 +112,28 @@ contract PredictEvent is ChainlinkClient {
         require (_price > 0 && _price < 100);
         require (_marketID < market.possibleOutcomes.length && _marketID >=0 );
         require (_amount > 0);
-        require (msg.value > _price * _amount);
+        if(_isBuy){
+            require (msg.value > _price * _amount);
+            }else{
+                require (msg.value > (100 - _price) * _amount);
 
-        (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
-        if (_isBuy){
-            emit logs("BUY ORDER",0);
-            placeBuyOrder(_price,_amount,msg.sender,_marketID);
-        }
-        else{
-            emit logs("SELL ORDER",0);
-            placeSellOrder(_price,_amount,msg.sender,_marketID);
-        }
-        (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
-    }
+            }
 
-    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
+            (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
+            if (_isBuy){
+                emit logs("BUY ORDER",0);
+                placeBuyOrder(_price,_amount,msg.sender,_marketID);
+            }
+            else{
+                emit logs("SELL ORDER",0);
+                placeSellOrder(_price,_amount,msg.sender,_marketID);
+            }
+            (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
+            deposited[msg.sender] += msg.value*9/10;  
+            depositedA.push(msg.sender);
+        }
+
+        function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
         if (_price < lowest_limit_sell[result]) { // Limit buy order
             emit logs("BUY LIMIT ORDER",0);
             Order memory order = Order({
@@ -301,47 +312,19 @@ contract PredictEvent is ChainlinkClient {
     
     function finalize(string auth_token) public noReentrancy {
         require (now > market.marketResolutionTimestamp);
-        require (!finalized);
+        // require (!finalized);
 
         finalizer = msg.sender;
         if (now > market.marketResolutionTimestamp + weekInSeconds // week passed after end of market
         && !finalized){  // and not finalized
-            closeInvalidMarket(); 
-            doTransactions();
+            doInvalidTransactions();
+            emit logs("invalidated",0);
             finalized = true;
             return;
         }
         getChainlinkResult(auth_token);
     }
 
-
-    function closeInvalidMarket () internal returns(bool res) {
-        require (!finalized);
-        
-        for(uint outcome=0;outcome<market.possibleOutcomes.length;outcome++){ // x = possible outcome
-            for(uint price=0;price<100;price++){ // all price levels
-                for(uint z=0;z<Orderbooks[outcome][price].BuyOrdersQueue.length;z++){
-                    address owner = Orderbooks[outcome][price].BuyOrdersQueue[z].owner;
-                    uint amount =Orderbooks[outcome][price].BuyOrdersQueue[z].filled*price;
-                    if(toPay[owner] == 0){
-                        addressesToPay.push(owner);
-                    }
-                    toPay[owner]+=amount;
-                }
-
-                for(z=0;z<Orderbooks[outcome][price].SellOrdersQueue.length;z++){
-                    owner = Orderbooks[outcome][price].BuyOrdersQueue[z].owner;
-                    amount = Orderbooks[outcome][price].BuyOrdersQueue[z].filled*(100-price);
-                    if(toPay[owner] == 0){
-                        addressesToPay.push(owner);
-                    }
-                    toPay[owner]+=amount;
-                }
-            }
-        }
-
-        return true; // to trigger noReentrty
-    }
 
 
     function getChainlinkResult (string auth_token) internal {
@@ -373,7 +356,7 @@ contract PredictEvent is ChainlinkClient {
         uint result = Shared.bytesToUint(abi.encodePacked(_result));
         eventFinalResult = result_to_index(result); // eventFinalResult is index of market, that won
         computeWinners();
-        doTransactions();
+        // doTransactions();
     }
 
     function result_to_index (uint result) internal returns(uint res) {
@@ -403,14 +386,26 @@ contract PredictEvent is ChainlinkClient {
         }
     }
 
-    function doTransactions ()  internal noReentrancy returns(bool res) {
+
+
+    function toString(address x) returns (string) {
+        bytes memory b = new bytes(20);
+        for (uint i = 0; i < 20; i++)
+        b[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
+        return string(b);
+    }
+
+    function doInvalidTransactions ()  internal returns(bool res) {
         require (!finalized);
         finalized = true;
         
-        for(uint x=0; x<addressesToPay.length;x++){
-            address add = addressesToPay[x];
-            uint amount = toPay[add];
-            require(add.send(amount));
+        for(uint x=0; x<depositedA.length;x++){
+            address add = depositedA[x];
+            string memory z = toString(add);
+            uint amount = deposited[add];
+            emit logs("PLATIM",amount);
+            emit logs(z,amount);
+            require(add.send( ));
         }
         return true; // to trigger noReentry
     } 
