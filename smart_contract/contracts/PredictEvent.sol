@@ -2,7 +2,6 @@ pragma solidity 0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "chainlink/contracts/ChainlinkClient.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./Shared.sol";
 
 /**

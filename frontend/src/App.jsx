@@ -13,7 +13,7 @@ import Footer from "./Footer.jsx";
 import HomePage from "./HomePage.jsx";
 import AllEventsPage from "./AllEventsPage.jsx";
 import AccountPage from "./AccountPage.jsx";
-import CreateMarketPage from "./CreateMarketPage.jsx"
+import CreateMarketPage from "./CreateEventPage.jsx"
 
 
 export default hot(class App extends React.Component {

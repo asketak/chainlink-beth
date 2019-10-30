@@ -37,9 +37,6 @@ export default class IntroContent extends React.Component {
     }
 
     render() {
-
-
-
         return (
             <section className="container">
 

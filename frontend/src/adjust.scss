@@ -3,13 +3,42 @@
 }
 
 .btn {
-    border-radius: 10px;
+  border-radius: 10px;
 }
 
 .container-content {
-    padding: 1.5rem 0;
+  padding: 1.5rem 0;
 }
 
 #AllEventsPage {
 
+  .event-head {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 200px;
+  }
+
+  .event-card-action {
+    flex-direction: row-reverse;
+
+    a {
+      padding: 0 20px 0 30px;
+
+      div {
+        height: 50px;
+        font-size: 1.7rem;
+      }
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+#CreateEventPage {
+  .input-col {
+    margin-bottom: 10px;
+  }
 }

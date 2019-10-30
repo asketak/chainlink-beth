@@ -14,6 +14,6 @@ app.use(require("webpack-hot-middleware")(compiler))
 
 app.use(express.static('public'))
 
-app.get(['/', "/markets", "/account", "/create-contract"], (req, res) => res.sendFile('/index.html', {root: __dirname + "/public"}))
+app.get(['/', "/markets", "/account", "/create-event"], (req, res) => res.sendFile('/index.html', {root: __dirname + "/public"}))
 
 app.listen(port, () => console.log(`Listening on port ${port}!`))

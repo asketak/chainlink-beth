@@ -3,7 +3,7 @@ import React from "react"
 import {Link} from "react-router-dom";
 import AppContext from "./AppContext";
 import EventFragment from "./EventFragment.jsx";
-import {Button} from "react-bootstrap";
+import {Button} from "@material-ui/core";
 
 export default class AllEventsPage extends React.Component {
 
@@ -70,7 +70,7 @@ export default class AllEventsPage extends React.Component {
         return (
             <div id="AllEventsPage" className="container-content">
                 <section className="container">
-                    <h1 style={{position: "relative"}}>
+                    <h1 style={{position: "relative", marginBottom:"20px"}}>
                         All&nbsp;
                         <b>
                             {allEvents
@@ -78,17 +78,25 @@ export default class AllEventsPage extends React.Component {
                                 : <div className="spinner-border text-warning" role="status"/>}
                         </b>
                         &nbsp;Markets:
-                        <Link to={"/create-event"}><Button variant="info" style={{position: "absolute", right: 0}}>Add Event</Button></Link>
+                        <Link to={"/create-event"}>
+                            <Button style={{position: "absolute", right: 0}} size="large" variant="contained" color="primary">
+                                Create Event
+                            </Button>
+                        </Link>
                     </h1>
 
                     <div className="row">
                         {(allEvents || []).map(event => (
-                                <div key={event.add} className="col-lg-4 mb-4">
-                                    <EventFragment address={event.add}/>
+                                <div key={event.add} className="col-lg-6 mb-4">
+                                    <EventFragment address={event.add} endTimestamp={1574009564000}/>
                                 </div>
                             )
                         )}
                     </div>
+
+                    <h1 style={{position: "relative", marginBottom:"20px"}}>
+                        Finished Events:
+                    </h1>
                 </section>
             </div>
         )
