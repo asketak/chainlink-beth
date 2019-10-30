@@ -26,9 +26,22 @@ contract PredictEvent is ChainlinkClient {
         Order[] SellOrdersQueue;
         uint unfilledSellOrdersPointer;
         uint unffilledSells;
+
+        uint sellLen;
+        uint buyLen;
     }
 
-    event logs(string agg);
+    event logs(string agg,uint a);
+    event lord(Order agg);
+
+    function showOrder (uint a,uint b, uint c, bool isBuy) constant public returns(Order res) {
+        if(isBuy){
+            return Orderbooks[a][b].BuyOrdersQueue[c];
+        }else{
+            return Orderbooks[a][b].SellOrdersQueue[c];
+        }
+    }
+    
     
     
 
@@ -66,123 +79,190 @@ contract PredictEvent is ChainlinkClient {
         return res;
     }
 
-
-    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
-        Order memory order = Order({
-            amount : _amount,
-            owner : _owner,
-            isBuy : true,
-            filled : 0
-            });
-
-        mapping (uint => OrderbookLevel) book = Orderbooks[result];
-
-        if (_price < lowest_limit_sell[result]) { // Limit buy order
-            Orderbooks[result][_price].BuyOrdersQueue.push(order);
-            Orderbooks[result][_price].unffilledBuys +=_amount;
-            if (_price > highest_limit_buy[result]){
-                highest_limit_buy[result] = _price;
-            }
-
+    function showBook(uint a) constant returns(uint[100][2][10] res) {
+        for(uint x =0; x<100;x++){
+            res[a][0][x] = Orderbooks[a][x].unffilledBuys;
+            res[a][1][x] = Orderbooks[a][x].unffilledSells;
         }
-
-        else{ // Market order, will fill some limit sell orders
-            uint remaining_amount = _amount;
-            uint matchprice = lowest_limit_sell[result];
-            for (; remaining_amount >0 && matchprice <= _price; matchprice++ ){ // we go from best price to higher price
-                uint filledThisLevel = 0;
-                uint priceLevelOrderCount = Orderbooks[result][matchprice].SellOrdersQueue.length;
-                uint unfilledSellOrdersPointer = Orderbooks[result][matchprice].unfilledSellOrdersPointer;
-
-                // for one price, we iterate through all sell orders of that price 
-                for (uint i=unfilledSellOrdersPointer; i<priceLevelOrderCount && remaining_amount > 0; i++) {
-                    Order storage sellOrder = Orderbooks[result][matchprice].SellOrdersQueue[i];
-                    // Our order is bigger that limit order, we fill it
-                    if (remaining_amount >= sellOrder.amount - sellOrder.filled){
-                        remaining_amount -= (sellOrder.amount - sellOrder.filled);
-                        Orderbooks[result][matchprice].unfilledSellOrdersPointer++;
-                        Orderbooks[result][matchprice].SellOrdersQueue[i].filled = Orderbooks[result][matchprice].SellOrdersQueue[i].amount;
-                        filledThisLevel += (sellOrder.amount - sellOrder.filled);
-                    }
-                    else{ // we can just partially fill the order
-                        Orderbooks[result][matchprice].SellOrdersQueue[i].filled += remaining_amount;
-                        remaining_amount = 0;
-                        filledThisLevel += remaining_amount;
-                        // Orderbooks[result][matchprice].unfilledSellOrdersPointer++; order is not filled
-                    }
-                }
-
-                // we compute how much we filled and append filled order into buyordersQue.
-                // There could be multiple filled buy orders from the past
-                if ( remaining_amount > 0 && matchprice < _price ){ // we will go for another level, just insert filled order here
-                    order = Order({
-                        amount : filledThisLevel,
-                        owner : _owner,
-                        isBuy : true,
-                        filled : filledThisLevel
-                        });
-                    Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
-                    Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; 
-                }else{ // This is the last iteration of for, update pointers
-
-                    // No more sell orders on this level, create new limit order buy and update pointers
-                    if(priceLevelOrderCount == unfilledSellOrdersPointer){
-                        order = Order({
-                            amount : filledThisLevel,
-                            owner : _owner,
-                            isBuy : true,
-                            filled : filledThisLevel
-                            });
-                        Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
-                        Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; 
-
-                        order = Order({
-                            amount : remaining_amount,
-                            owner : _owner,
-                            isBuy : true,
-                            filled : 0
-                            });
-                        Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
-
-                        highest_limit_buy[result] = matchprice;
-                        lowest_limit_sell[result] = matchprice+1;
-
-                    // There are still unfilled sell orders at match price = this order got filled
-                    }else{
-                        order = Order({
-                            amount : filledThisLevel,
-                            owner : _owner,
-                            isBuy : true,
-                            filled : filledThisLevel
-                            });
-                        Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
-                        highest_limit_buy[result] = matchprice-1;
-                        lowest_limit_sell[result] = matchprice;
-                        Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; 
-                    }
-                }
-            }
-        }
-
-        // emit OrderbooksUpdate(Orderbooks);
-
-
+        return res;
     }
 
-    OrderbookLevel o;
+
+    function computeLimits (uint _marketID) constant returns(uint buy, uint sell)  {
+        buy = 0;
+        sell = 100;
+        for(uint x =0; x<100;x++){
+            if(Orderbooks[_marketID][x].unffilledBuys > 0){
+                buy = x;
+            }
+            if(Orderbooks[_marketID][99-x].unffilledSells > 0){
+                sell = 99-x;
+            }
+
+        }
+        return (buy,sell);
+    }
+    
 
     function placeOrder( uint _price, uint _amount, bool _isBuy, uint _marketID  ) public payable {
         require (_price > 0 && _price < 100);
         require (_marketID < market.possibleOutcomes.length && _marketID >=0 );
         require (_amount > 0);
         require (msg.value > _price * _amount);
+
+        (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
         if (_isBuy){
-            emit logs("inisbuy");
+            emit logs("BUY ORDER",0);
             placeBuyOrder(_price,_amount,msg.sender,_marketID);
         }
         else{
-            // placeSellOrder(_price,_amount,msg.sender,_result);
+            emit logs("SELL ORDER",0);
+            placeSellOrder(_price,_amount,msg.sender,_marketID);
         }
+        (highest_limit_buy[_marketID], lowest_limit_sell[_marketID]) =  computeLimits(_marketID);
+    }
+
+    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
+        if (_price < lowest_limit_sell[result]) { // Limit buy order
+            emit logs("BUY LIMIT ORDER",0);
+            Order memory order = Order({
+                amount : _amount,
+                owner : _owner,
+                isBuy : true,
+                filled : 0
+                });
+            Orderbooks[result][_price].BuyOrdersQueue.push(order);
+            Orderbooks[result][_price].unffilledBuys +=_amount;
+            emit lord(order);
+
+
+        }
+
+        else{ // Market order, will fill some limit sell orders
+            emit logs("BUY market ORDER",0);
+            uint remaining_amount = _amount;
+            uint matchprice = lowest_limit_sell[result];
+            for (; remaining_amount >0 && matchprice <= _price; matchprice++ ){ // we go from best price to higher price
+                emit logs("If for cycle, price:" , matchprice);
+                uint filledThisLevel = 0;
+                uint priceLevelOrderCount = Orderbooks[result][matchprice].SellOrdersQueue.length;
+                uint unfilledSellOrdersPointer = Orderbooks[result][matchprice].unfilledSellOrdersPointer;
+                emit logs("ordercount " , priceLevelOrderCount);
+                emit logs("unfilpointer " , unfilledSellOrdersPointer);
+
+                // for one price, we iterate through all sell orders of that price 
+                for (uint i=unfilledSellOrdersPointer; i<priceLevelOrderCount && remaining_amount > 0; i++) {
+                    Order storage sellOrder = Orderbooks[result][matchprice].SellOrdersQueue[i];
+                    // Our order is bigger that limit order, we fill it
+                    if (remaining_amount >= sellOrder.amount - sellOrder.filled){
+                        remaining_amount -= (sellOrder.amount - sellOrder.filled); // my remaining amount to fill
+                        Orderbooks[result][matchprice].unfilledSellOrdersPointer++; // move pointer
+                        filledThisLevel += (sellOrder.amount - sellOrder.filled); // amount we filled on this level
+                        sellOrder.filled = sellOrder.amount; // fill sell order
+                    }
+                    else{ // we can just partially fill the order
+                        // Orderbooks[result][matchprice].unfilledSellOrdersPointer++; order is not filled
+                        sellOrder.filled += remaining_amount;
+                        filledThisLevel += remaining_amount;
+                        remaining_amount = 0;
+                    }
+                }
+
+                order = Order({
+                    amount : filledThisLevel,
+                    owner : _owner,
+                    isBuy : true,
+                    filled : filledThisLevel
+                    });
+                emit lord(order);
+                Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
+                Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; 
+                Orderbooks[result][matchprice].unffilledSells -=filledThisLevel;
+                if ( remaining_amount > 0 && matchprice == _price ){ // we will go for another level, just insert filled order here
+                    order = Order({
+                        amount : remaining_amount,
+                        owner : _owner,
+                        isBuy : true,
+                        filled : 0
+                        });
+                    emit lord(order);
+                    Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
+                    Orderbooks[result][matchprice].unffilledBuys +=remaining_amount;
+
+                }
+            }
+        }
+    }
+
+    function placeSellOrder( uint _price, uint _amount, address _owner, uint result) internal {
+        if (_price > highest_limit_buy[result]) { // Limit sell order
+            emit logs("SELL LIMIT ORDER",0);
+            Order memory order = Order({
+                amount : _amount,
+                owner : _owner,
+                isBuy : false,
+                filled : 0
+                });
+            emit lord(order);
+            Orderbooks[result][_price].SellOrdersQueue.push(order);
+            Orderbooks[result][_price].unffilledSells +=_amount;
+
+        }
+
+        else{ // Market order, will fill some limit buy orders
+            uint remaining_amount = _amount;
+            uint matchprice = highest_limit_buy[result];
+            for (; remaining_amount >0 && matchprice >= _price; matchprice-- ){ // we go from best price to higher price
+                uint filledThisLevel = 0;
+                uint priceLevelOrderCount = Orderbooks[result][matchprice].BuyOrdersQueue.length;
+                uint unfilledBuyOrdersPointer = Orderbooks[result][matchprice].unfilledBuyOrdersPointer;
+
+                // for one price, we iterate through all sell orders of that price 
+                for (uint i=unfilledBuyOrdersPointer; i<priceLevelOrderCount && remaining_amount > 0; i++) {
+                    Order storage buyOrder = Orderbooks[result][matchprice].BuyOrdersQueue[i];
+                    // Our order is bigger that limit order, we fill it
+                    if (remaining_amount >= buyOrder.amount - buyOrder.filled){
+                        remaining_amount -= (buyOrder.amount - buyOrder.filled); // my remaining amount to fill
+                        Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; // move pointer
+                        filledThisLevel += (buyOrder.amount - buyOrder.filled); // amount we filled on this level
+                        buyOrder.filled = buyOrder.amount; // fill sell order
+                    }
+                    else{ // we can just partially fill the order
+                        // Orderbooks[result][matchprice].unfilledbuyOrdersPointer++; order is not filled
+                        buyOrder.filled += remaining_amount;
+                        filledThisLevel += remaining_amount;
+                        remaining_amount = 0;
+                    }
+                }
+
+                order = Order({
+                    amount : filledThisLevel,
+                    owner : _owner,
+                    isBuy : false,
+                    filled : filledThisLevel
+                    });
+                emit lord(order);
+                Orderbooks[result][matchprice].SellOrdersQueue.push(order);
+                Orderbooks[result][matchprice].unfilledSellOrdersPointer++; 
+                Orderbooks[result][matchprice].unffilledBuys -=filledThisLevel;
+
+                // we compute how much we filled and append filled order into sellorders.
+                // There could be multiple filled sell orders from the past
+                if ( remaining_amount > 0 && matchprice == _price ){ // we will go for another level, just insert filled order here
+                    order = Order({
+                        amount : remaining_amount,
+                        owner : _owner,
+                        isBuy : false,
+                        filled : 0
+                        });
+                    emit lord(order);
+                    Orderbooks[result][matchprice].SellOrdersQueue.push(order);
+                    Orderbooks[result][matchprice].unffilledSells +=remaining_amount;
+
+                }
+            }
+        }
+
     }
 
     function initialize (Shared.Market _market ) public {
@@ -291,7 +371,7 @@ contract PredictEvent is ChainlinkClient {
             return;
         }
         uint result = Shared.bytesToUint(abi.encodePacked(_result));
-        eventFinalResult = result_to_index(result);
+        eventFinalResult = result_to_index(result); // eventFinalResult is index of market, that won
         computeWinners();
         doTransactions();
     }
