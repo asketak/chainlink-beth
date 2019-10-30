@@ -22,15 +22,22 @@ contract PredictEvent is ChainlinkClient {
     struct OrderbookLevel{
         Order[] BuyOrdersQueue;
         uint unfilledBuyOrdersPointer;
+        uint unffilledBuys;
         Order[] SellOrdersQueue;
         uint unfilledSellOrdersPointer;
+        uint unffilledSells;
     }
-    struct E { OrderbookLevel[10][100] books;}
-    event OrderbooksUpdate(E);
+
+    event logs(string agg);
+    
+    
+
+    
+    
 
     
     // market result -> price of asset -> orderbooklevel
-    mapping(uint => mapping(uint => OrderbookLevel)) Orderbooks;
+    mapping(uint => mapping(uint => OrderbookLevel)) public Orderbooks;
     uint[] public highest_limit_buy;
     uint[] public lowest_limit_sell;
     Shared.Market public market;
@@ -48,7 +55,16 @@ contract PredictEvent is ChainlinkClient {
     
     constructor() public {
     }
-
+    
+    function showBooks() constant returns(uint[100][2][10] res) {
+        for(uint a =0; a<10;a++){
+            for(uint x =0; x<100;x++){
+                res[a][0][x] = Orderbooks[a][x].unffilledBuys;
+                res[a][1][x] = Orderbooks[a][x].unffilledSells;
+            }
+        }
+        return res;
+    }
 
 
     function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
@@ -63,6 +79,7 @@ contract PredictEvent is ChainlinkClient {
 
         if (_price < lowest_limit_sell[result]) { // Limit buy order
             Orderbooks[result][_price].BuyOrdersQueue.push(order);
+            Orderbooks[result][_price].unffilledBuys +=_amount;
             if (_price > highest_limit_buy[result]){
                 highest_limit_buy[result] = _price;
             }
@@ -79,7 +96,7 @@ contract PredictEvent is ChainlinkClient {
 
                 // for one price, we iterate through all sell orders of that price 
                 for (uint i=unfilledSellOrdersPointer; i<priceLevelOrderCount && remaining_amount > 0; i++) {
-                    Order sellOrder = Orderbooks[result][matchprice].SellOrdersQueue[i];
+                    Order storage sellOrder = Orderbooks[result][matchprice].SellOrdersQueue[i];
                     // Our order is bigger that limit order, we fill it
                     if (remaining_amount >= sellOrder.amount - sellOrder.filled){
                         remaining_amount -= (sellOrder.amount - sellOrder.filled);
@@ -152,28 +169,20 @@ contract PredictEvent is ChainlinkClient {
 
     }
 
-    function placeOrder( uint _price, uint _amount, bool _isBuy, uint _result  ) public payable {
+    OrderbookLevel o;
+
+    function placeOrder( uint _price, uint _amount, bool _isBuy, uint _marketID  ) public payable {
         require (_price > 0 && _price < 100);
-        require (_result < market.possibleOutcomes.length && _result >=0 );
+        require (_marketID < market.possibleOutcomes.length && _marketID >=0 );
         require (_amount > 0);
         require (msg.value > _price * _amount);
         if (_isBuy){
-            placeBuyOrder(_price,_amount,msg.sender,_result);
+            emit logs("inisbuy");
+            placeBuyOrder(_price,_amount,msg.sender,_marketID);
         }
         else{
             // placeSellOrder(_price,_amount,msg.sender,_result);
         }
-
-        OrderbookLevel[10][100] tmp;
-        for (uint x = 0; x < market.possibleOutcomes.length; x++) {
-            for (uint y = 0; y < 100; y++) {
-                tmp[x][y] = Orderbooks[x][y];
-            }
-        }
-        E memory t = E({
-            books : tmp
-        });
-        emit OrderbooksUpdate(t);
     }
 
     function initialize (Shared.Market _market ) public {
@@ -229,8 +238,6 @@ contract PredictEvent is ChainlinkClient {
     function closeInvalidMarket () internal returns(bool res) {
         require (!finalized);
         
-        address[] addressesToPay;
-
         for(uint outcome=0;outcome<market.possibleOutcomes.length;outcome++){ // x = possible outcome
             for(uint price=0;price<100;price++){ // all price levels
                 for(uint z=0;z<Orderbooks[outcome][price].BuyOrdersQueue.length;z++){
@@ -260,7 +267,7 @@ contract PredictEvent is ChainlinkClient {
     function getChainlinkResult (string auth_token) internal {
         bytes32 jobId;
         address oracle;
-        Shared.ApiRequest r = market.request;
+        Shared.ApiRequest storage r = market.request;
         // newRequest takes a JobID, a callback address, and callback function as input
         
         Chainlink.Request memory req = buildChainlinkRequest(jobId, this, this.fulfill.selector);
@@ -299,7 +306,7 @@ contract PredictEvent is ChainlinkClient {
         require (!finalized);
         
 
-        Order[] queue;
+        Order[] memory queue;
 
         for(uint outcome=0;outcome<market.possibleOutcomes.length;outcome++){ 
             for(uint price=0;price<100;price++){ // all price levels
