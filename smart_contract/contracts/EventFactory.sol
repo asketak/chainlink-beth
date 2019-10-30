@@ -11,6 +11,9 @@ contract EventFactory {
     uint256[] tmp;
     
     ContractInfo[] public allContracts;
+    
+    mapping(uint => OrderbookLevel) Markets
+    
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
      string _getData , string _postData , string _jsonRegexString ) public {
 
@@ -41,6 +44,10 @@ contract EventFactory {
 
     function getAddressCount() public constant returns (uint) {
         return allContracts.length;
+    }
+    
+    function getAllEvents() public constant returns(ContractInfo[]) {
+        return allContracts;
     }
 
 }

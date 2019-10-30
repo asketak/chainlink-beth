@@ -1,7 +1,7 @@
 export default {
-	eventFactory: {
-		address: "0x165d892DF842F7906046206f5105fbdF7c467E02",
-		abi: [
+	EventFactory: {
+		address: "0xaF6aC95e47683e926AF16b1b72E246BAcb2A4ae2",
+		"abi": [
 			{
 				"constant": true,
 				"inputs": [
@@ -76,67 +76,130 @@ export default {
 				"payable": false,
 				"stateMutability": "view",
 				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "getAllEvents",
+				"outputs": [
+					{
+						"components": [
+							{
+								"name": "add",
+								"type": "address"
+							},
+							{
+								"name": "timestamp",
+								"type": "uint256"
+							}
+						],
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
 			}
 		]
 	},
-	moveExample: {
-		address: "0xD95C884237b1A8B7D289dBbd9dC6b3c58fafbD1B",
-		abi: [
+	PredictEvent: {
+		address: "",
+		"abi": [
 			{
-				"constant": false,
+				"constant": true,
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "receiver",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "sender",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
+						"name": "",
 						"type": "uint256"
 					}
 				],
-				"name": "moveAnyonesCoins",
+				"name": "lowest_limit_sell",
 				"outputs": [
 					{
-						"internalType": "bool",
-						"name": "sufficient",
-						"type": "bool"
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"payable": false,
-				"stateMutability": "nonpayable",
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
-				"constant": false,
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "receiver",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					}
-				],
-				"name": "sendCoin",
+				"constant": true,
+				"inputs": [],
+				"name": "myAddress",
 				"outputs": [
 					{
-						"internalType": "bool",
-						"name": "sufficient",
-						"type": "bool"
+						"name": "",
+						"type": "address"
 					}
 				],
 				"payable": false,
-				"stateMutability": "nonpayable",
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "market",
+				"outputs": [
+					{
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"name": "marketResolutionTimestamp",
+						"type": "uint256"
+					},
+					{
+						"components": [
+							{
+								"name": "apiPath",
+								"type": "string"
+							},
+							{
+								"name": "httpPostOrGet",
+								"type": "string"
+							},
+							{
+								"name": "getData",
+								"type": "string"
+							},
+							{
+								"name": "postData",
+								"type": "string"
+							},
+							{
+								"name": "jsonRegexString",
+								"type": "string"
+							}
+						],
+						"name": "request",
+						"type": "tuple"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "highest_limit_buy",
+				"outputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -150,45 +213,211 @@ export default {
 				"inputs": [
 					{
 						"indexed": true,
-						"internalType": "address",
-						"name": "_from",
-						"type": "address"
-					},
-					{
-						"indexed": true,
-						"internalType": "address",
-						"name": "_to",
-						"type": "address"
-					},
-					{
-						"indexed": false,
-						"internalType": "uint256",
-						"name": "_value",
-						"type": "uint256"
+						"name": "id",
+						"type": "bytes32"
 					}
 				],
-				"name": "Transfer",
+				"name": "ChainlinkRequested",
 				"type": "event"
 			},
 			{
-				"constant": true,
+				"anonymous": false,
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "addr",
-						"type": "address"
+						"indexed": true,
+						"name": "id",
+						"type": "bytes32"
 					}
 				],
-				"name": "getBalance",
-				"outputs": [
+				"name": "ChainlinkFulfilled",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "",
+						"indexed": true,
+						"name": "id",
+						"type": "bytes32"
+					}
+				],
+				"name": "ChainlinkCancelled",
+				"type": "event"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "_price",
+						"type": "uint256"
+					},
+					{
+						"name": "_amount",
+						"type": "uint256"
+					},
+					{
+						"name": "_owner",
+						"type": "address"
+					},
+					{
+						"name": "result",
 						"type": "uint256"
 					}
 				],
+				"name": "placeBuyOrder",
+				"outputs": [],
 				"payable": false,
-				"stateMutability": "view",
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "_price",
+						"type": "uint256"
+					},
+					{
+						"name": "_amount",
+						"type": "uint256"
+					},
+					{
+						"name": "_owner",
+						"type": "address"
+					},
+					{
+						"name": "result",
+						"type": "uint256"
+					}
+				],
+				"name": "placeSellOrder",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"components": [
+							{
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"name": "marketResolutionTimestamp",
+								"type": "uint256"
+							},
+							{
+								"components": [
+									{
+										"name": "apiPath",
+										"type": "string"
+									},
+									{
+										"name": "httpPostOrGet",
+										"type": "string"
+									},
+									{
+										"name": "getData",
+										"type": "string"
+									},
+									{
+										"name": "postData",
+										"type": "string"
+									},
+									{
+										"name": "jsonRegexString",
+										"type": "string"
+									}
+								],
+								"name": "request",
+								"type": "tuple"
+							},
+							{
+								"name": "possibleOutcomes",
+								"type": "uint256[]"
+							}
+						],
+						"name": "_market",
+						"type": "tuple"
+					}
+				],
+				"name": "initialize",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "_price",
+						"type": "uint256"
+					},
+					{
+						"name": "_amount",
+						"type": "uint256"
+					},
+					{
+						"name": "_isBuy",
+						"type": "bool"
+					},
+					{
+						"name": "result",
+						"type": "uint256"
+					}
+				],
+				"name": "placeOrder",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "_requestId",
+						"type": "bytes32"
+					},
+					{
+						"name": "_result",
+						"type": "uint256"
+					}
+				],
+				"name": "fulfill",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "_oracle",
+						"type": "address"
+					},
+					{
+						"name": "_jobId",
+						"type": "bytes32"
+					},
+					{
+						"name": "_payment",
+						"type": "uint256"
+					},
+					{
+						"name": "auth_token",
+						"type": "string"
+					}
+				],
+				"name": "finalize",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
 				"type": "function"
 			}
 		]

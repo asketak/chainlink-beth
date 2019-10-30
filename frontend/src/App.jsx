@@ -11,8 +11,9 @@ import AppContext from "./AppContext.js";
 import Navbar from "./Navbar.jsx";
 import Footer from "./Footer.jsx";
 import HomePage from "./HomePage.jsx";
-import MarketsPage from "./MarketsPage.jsx";
+import AllEventsPage from "./AllEventsPage.jsx";
 import AccountPage from "./AccountPage.jsx";
+import CreateMarketPage from "./CreateMarketPage.jsx"
 
 
 export default hot(class App extends React.Component {
@@ -54,7 +55,11 @@ export default hot(class App extends React.Component {
 						/>
 
 						<Route path='/markets'
-							   render={props => <MarketsPage {...this.state} />}
+							   render={props => <AllEventsPage {...this.state} />}
+						/>
+
+						<Route path="/create-event"
+							   render={props => <CreateMarketPage {...this.state} />}
 						/>
 
 						<Route path='/account'
@@ -67,7 +72,7 @@ export default hot(class App extends React.Component {
 					:
 					<Router>
 						<Navbar/>
-						<div style={{fontAlign: "center"}}>Metamask not deteced</div>
+						<div style={{fontAlign: "center", fontSize: "20px"}}>Metamask not deteced</div>
 						<Footer/>
 					</Router>}
 			</AppContext.Provider>

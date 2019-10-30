@@ -22,6 +22,10 @@ module.exports = {
 		publicPath: "/"
 	},
 
+	resolve: {
+		alias: devMode ? { 'react-dom': '@hot-loader/react-dom'  } : {}
+	},
+
 	devtool: "source-map",
 
 	optimization: {

@@ -6,145 +6,74 @@ import deployedContracts from "./deployedContracts.js";
 
 export default class IntroContent extends React.Component {
 
-	constructor(props, context) {
-		super(props, context)
-	}
+    constructor(props, context) {
+        super(props, context)
+    }
 
-	state = {
-		inited: false,
-		addressCount: null,
-		markets: []
-	}
+    state = {
+        inited: false,
+        addressCount: null,
+		allEvents: []
+    }
 
-	componentDidMount() {
-		this.refreshEventsView()
-	}
+    componentDidMount() {
+        this.fetchAllEvents()
+    }
 
-	componentDidUpdate(prevProps, prevState, snapshot) {
-		this.refreshEventsView()
-	}
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        this.fetchAllEvents()
+    }
 
-	refreshEventsView(force) {
-		if (force || (!this.state.inited && this.state.addressCount === null && this.context.w3a)) {
-			this.setState({inited: true})
-			this.EventFactory = this.context.w3a.getContract(deployedContracts.eventFactory)
-			this.EventFactory.methods.getAddressCount().call()
-				.then(addressCount => {
-					this.setState(state => ({markets: []}))
-					for (let i = 0; i < addressCount; i++) {
-						this.EventFactory.methods.allContracts(i).call()
-							.then(contract => {
-								this.setState(state => ({
-									markets: state.markets.concat(contract)
-								}))
-							})
-					}
-					this.setState(state => ({addressCount: addressCount}))
+    fetchAllEvents(force) {
+        if (force || (!this.state.inited && this.state.addressCount === null && this.context.w3a)) {
+            this.setState({inited: true})
+            this.EventFactory = this.context.w3a.contracts.EventFactory.getAllEvents.call()
+				.then(allEvents => {
+					this.setState(state => ({
+						allEvents: allEvents
+					}))
 				})
-		}
-	}
+        }
+    }
 
-	render() {
-
-		const inputs = [
-			"name",
-			"timestamp",
-			"apiPath",
-			"postOrGet",
-			"getData",
-			"postData",
-			"jsonRegex"
-		]
-
-		return (
-			<section className="container">
-
-				<h2>Markets Count <b>{this.state.addressCount}</b></h2>
-				<h2>Markets:</h2>
-
-				<div className="row">
-					{this.state.markets.map(market => (
-							<div className="col-lg-4 mb-4">
-								<div className="card h-100">
-									<h4 className="card-header">add: {market.add}</h4>
-									<div className="card-body">
-										<p className="card-text">timestamp: {market.timestamp}</p>
-									</div>
-									<div className="card-footer">
-										<a href="/markets/address" className="btn btn-primary">Not Impl</a>
-									</div>
-								</div>
-							</div>
-						)
-					)}
-				</div>
+    render() {
 
 
-				<div className="row">
-					<form id="test1">
-						<div className="container">
-							<div className="row">
 
-								{inputs.map(input =>
-									<div className="col-lg-3">
-										<div className="form-group">
-											<label className="btn-l">{input}</label>
-											<input id={input} className="form-control"
-												   defaultValue={input === "timestamp" ? 3000 : input}
-												   disabled={this.state.running}/>
-										</div>
-									</div>
-								)}
+        return (
+            <section className="container">
 
-								<div className="col-lg-3" style={{textAlign: "center"}}>
-									<button className={"btn btn-primary btn-a" + (this.state.running ? "btn-anima": "")}
-											style={{
-												position: "absolute",
-												top: "50%",
-												left: "50%",
-												transform: "translate(-50%, -50%)"
-											}}
-											disabled={this.state.running}
-											onClick={e => {
-												e.preventDefault()
-												this.setState(state => ({running: true}))
-												const request = {}
-												document.querySelectorAll("#test1 input").forEach(input => {
-													request[input.id] = (input.id === "timestamp" ? parseInt(input.value) : input.value)
-												})
+                <h2>Popular Markets:</h2>
+                <div className="row">
+                    {this.state.allEvents.map(event => (
+                            <div key={event.add} className="col-lg-4 mb-4">
+                                <div className="card h-100">
+                                    <h4 className="card-header">add: {event.add}</h4>
+                                    <div className="card-body">
+                                        <p className="card-text">timestamp: {event.timestamp}</p>
+                                    </div>
+                                    <div className="card-footer">
+                                        <a href="/markets/address" className="btn btn-primary">Not Impl</a>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    )}
+                </div>
 
-												this.context.w3a.sendTransactionAndWaitForResult(this.EventFactory.methods.createContract(request.name, request.timestamp,
-													request.apiPath, request.postOrGet, request.getData, request.postData, request.jsonRegex))
-													.then(rest => {
-														console.log("transactino commited")
-														console.log(rest)
-														this.refreshEventsView(true)
-													})
-													.catch(e => {
-														debugger
-													})
-													.finally(() => {
-														this.setState(state => ({running: false}))
-													})
-											}}>
-										{this.state.running ?
-											<div className="spinner-border text-warning" role="status">
-												<span className="sr-only">Loading...</span>
-											</div>
-											:
-											<h4>
-												<b>Send Tx</b>
-											</h4>}
-									</button>
-								</div>
 
-							</div>
-						</div>
-					</form>
-				</div>
+                <div className="row">
+                    <form id="test1">
+                        <div className="container">
+                            <div className="row">
 
-			</section>
-		)
-	}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </section>
+        )
+    }
 }
 IntroContent.contextType = AppContext

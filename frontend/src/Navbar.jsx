@@ -3,6 +3,8 @@ import {Link} from "react-router-dom"
 
 import AppContext from "./AppContext.js";
 
+import {Button} from '@material-ui/core';
+
 export default class Navbar extends React.Component {
 
     render() {
@@ -30,21 +32,32 @@ class AccountNavbarArea extends React.Component {
         const {userAddress} = this.props
 
         return (
-            userAddress ?
-                (
-                    <li className="nav-item">
-                        Address: {userAddress}
-                        <Link id="login" className="nav-link btn btn-warning" style={{display: "inline-block"}} to="/account">Login</Link>
-                    </li>
-                )
-                :
-                (
-                    <li className="nav-item">
-                        <Link className="nav-link" to="/account">Login</Link>
-                    </li>
-                )
-
-
+            userAddress ? this.renderLogin(userAddress) : this.renderLoggedOut()
         );
+    }
+
+    renderLogin(userAddress) {
+        const classes =
+            {
+                button: {
+                    margin: "1rem"
+                }
+            }
+        const addressAbbreviation = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4)
+        return (
+            <li className="nav-item">
+                <Link id="login" className="nav-link btn btn-warning font-weight-bolder" style={{display: "inline-block"}} to="/account">
+                    Account: {addressAbbreviation}
+                </Link>
+            </li>
+        )
+    }
+
+    renderLoggedOut() {
+        return (
+            <li className="nav-item">
+                <Link className="nav-link" to="/account">Login</Link>
+            </li>
+        )
     }
 }
