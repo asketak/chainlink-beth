@@ -14,6 +14,7 @@ contract EventFactory {
     mapping(uint => ContractInfo) public allContracts;
     uint allsize;
     Shared.Outcome[] tmp;
+    ContractInfo[] ret;
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
        string _getData , string _postData , string _jsonRegexString) public {
 
@@ -63,8 +64,11 @@ contract EventFactory {
     }
     
     function getAllEvents() public constant returns(ContractInfo[]) {
-        return allContracts;
+        delete ret;
+        for(uint x = 0; x<allsize;x++){
+            ret.push(allContracts[x]);
+        }
+        return ret;
     }
 
-}
 }
