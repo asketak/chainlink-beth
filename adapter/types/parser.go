@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// will use remaining interface and will try to apply function calls or comparisons on it
 func ParseFuncs(in interface{}, funcsPath string) interface{} {
 	if funcsPath == "" {
 		return in
@@ -43,6 +44,7 @@ func ParseFuncs(in interface{}, funcsPath string) interface{} {
 	return ParseFuncs(step, remaining)
 }
 
+// supplies comparison rules
 func callComparissonFunc(in map[string]interface{}, comparison string, operator string) bool {
 	operands := strings.Split(comparison, operator)
 	if len(operands) != 2 {
@@ -100,6 +102,7 @@ func callComparissonFunc(in map[string]interface{}, comparison string, operator 
 	return false
 }
 
+// supplies function call
 func callArrayFunc(in []interface{}, funcName string) interface{} {
 	switch funcName {
 	case FuncLength:
@@ -109,6 +112,7 @@ func callArrayFunc(in []interface{}, funcName string) interface{} {
 	}
 }
 
+// will use remaining interface and will try to use json-path to navigate to inner structure/value
 func ParseJsonPath(in interface{}, jsonPath string) interface{} {
 	if jsonPath == "" {
 		return in
