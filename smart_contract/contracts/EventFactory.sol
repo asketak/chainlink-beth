@@ -1,3 +1,4 @@
+pragma solidity 0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./PredictEvent.sol";
@@ -8,14 +9,14 @@ contract EventFactory {
         address add;
         uint timestamp;
     }
-    uint256[] tmp;
+
     
-    ContractInfo[] public allContracts;
-    
-    mapping(uint => OrderbookLevel) Markets
-    
+    mapping(uint => ContractInfo) public allContracts;
+    uint allsize;
+    Shared.Outcome[] tmp;
+    ContractInfo[] ret;
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
-     string _getData , string _postData , string _jsonRegexString ) public {
+       string _getData , string _postData , string _jsonRegexString) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
             apiPath : _apiPath,
@@ -26,9 +27,18 @@ contract EventFactory {
             });
 
         if(tmp.length <2){
-            tmp.push(1);
-            tmp.push(2);
+
+
+            Shared.Outcome memory ord = Shared.Outcome({
+                name:"",
+                minValue:0,
+                maxValue:4
+                });
+            tmp.push(ord);
+            tmp.push(ord);
         }
+        
+
         Shared.Market memory market = Shared.Market({
             name : _name,
             marketResolutionTimestamp : _marketResolutionTimestamp,
@@ -38,16 +48,27 @@ contract EventFactory {
 
         PredictEvent newContract = new PredictEvent();
         newContract.initialize(market);
+        uint m = _marketResolutionTimestamp;
+        address a = address(newContract);
+        ContractInfo memory c = ContractInfo({
+            add: a,
+            timestamp : m});
 
-        allContracts.push(ContractInfo({add: newContract,timestamp:_marketResolutionTimestamp}));
+        allContracts[allsize] = c;
+        allsize = allsize+1;
+        
     } 
 
     function getAddressCount() public constant returns (uint) {
-        return allContracts.length;
+        return allsize;
     }
     
     function getAllEvents() public constant returns(ContractInfo[]) {
-        return allContracts;
+        delete ret;
+        for(uint x = 0; x<allsize;x++){
+            ret.push(allContracts[x]);
+        }
+        return ret;
     }
 
 }
