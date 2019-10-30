@@ -7,11 +7,26 @@ library Shared {
         string jsonRegexString; // " results.prizes[0].open"
     }
 
+    struct Outcome {
+        string name;
+        uint maxValue;
+        uint minValue;
+    }
+    
+
     // Properties for betting event
     struct Market {
         string name;
         uint256 marketResolutionTimestamp;
         ApiRequest request;
-        uint[] possibleOutcomes;
+        Outcome[] possibleOutcomes;
+    }
+
+    function bytesToUint(bytes b) public returns (uint256){
+        uint256 number;
+        for(uint i=0;i<b.length;i++){
+            number = number + uint(b[i])*(2**(8*(b.length-(i+1))));
+        }
+        return number;
     }
 }

@@ -2,7 +2,6 @@ pragma solidity 0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "chainlink/contracts/ChainlinkClient.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./Shared.sol";
 
 /**
@@ -11,12 +10,9 @@ import "./Shared.sol";
 
 contract PredictEvent is ChainlinkClient {
 
-
-
     // Orderbook to trade each possible outcome
     struct Order {
         uint amount;
-        // uint price;
         address owner;
         uint filled;
         bool isBuy;
@@ -29,19 +25,33 @@ contract PredictEvent is ChainlinkClient {
         Order[] SellOrdersQueue;
         uint unfilledSellOrdersPointer;
     }
+    struct E { OrderbookLevel[10][100] books;}
+    event OrderbooksUpdate(E);
 
-    address public myAddress;
+    
     // market result -> price of asset -> orderbooklevel
     mapping(uint => mapping(uint => OrderbookLevel)) Orderbooks;
     uint[] public highest_limit_buy;
     uint[] public lowest_limit_sell;
     Shared.Market public market;
-        uint result;
+    uint public eventFinalResult;
+    bool public finalized;
+    bool public initialized;
+    mapping (address => uint) toPay;
+    bool locked;
+    uint maximumBumberOfOrders; // to prevent stalling contract
+    bytes32 CHAINLINKERRORCONST = bytes32("CHAINLING NODE ERROR"); // magical value, returned by adapter when error occurs
+    
+    uint constant weekInSeconds = 7*24*3600;
+    address finalizer;
+    address[] addressesToPay;
+    
+    constructor() public {
+    }
 
-    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) public {
-        // require(_price*_amount > ethBalances[_owner]);
-        // ethBalances[_owner] =- _price * _amount ;
 
+
+    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
         Order memory order = Order({
             amount : _amount,
             owner : _owner,
@@ -49,7 +59,7 @@ contract PredictEvent is ChainlinkClient {
             filled : 0
             });
 
-        mapping(uint => OrderbookLevel) book = Orderbooks[result];
+        mapping (uint => OrderbookLevel) book = Orderbooks[result];
 
         if (_price < lowest_limit_sell[result]) { // Limit buy order
             Orderbooks[result][_price].BuyOrdersQueue.push(order);
@@ -137,65 +147,184 @@ contract PredictEvent is ChainlinkClient {
             }
         }
 
+        // emit OrderbooksUpdate(Orderbooks);
+
+
     }
 
-  constructor() public {
-    myAddress = address(this);
-    
-  }
-
-    function placeSellOrder( uint _price, uint _amount, address _owner, uint result) public {
-    }
-
-
-    function initialize (Shared.Market _market ) public {
-        // setPublicChainlinkToken;
-        market = _market;
-
-        for (uint x = 0; x < market.possibleOutcomes.length; x++) {
-            highest_limit_buy.push(0);
-            lowest_limit_sell.push(100);
-        }
-    }
-
-    function placeOrder( uint _price, uint _amount, bool _isBuy, uint result  ) public {
+    function placeOrder( uint _price, uint _amount, bool _isBuy, uint _result  ) public payable {
         require (_price > 0 && _price < 100);
-
+        require (_result < market.possibleOutcomes.length && _result >=0 );
+        require (_amount > 0);
+        require (msg.value > _price * _amount);
         if (_isBuy){
-            placeBuyOrder(_price,_amount,msg.sender,result);
+            placeBuyOrder(_price,_amount,msg.sender,_result);
         }
         else{
-            placeSellOrder(_price,_amount,msg.sender,result);
+            // placeSellOrder(_price,_amount,msg.sender,_result);
+        }
+
+        OrderbookLevel[10][100] tmp;
+        for (uint x = 0; x < market.possibleOutcomes.length; x++) {
+            for (uint y = 0; y < 100; y++) {
+                tmp[x][y] = Orderbooks[x][y];
+            }
+        }
+        E memory t = E({
+            books : tmp
+        });
+        emit OrderbooksUpdate(t);
+    }
+
+    function initialize (Shared.Market _market ) public {
+        require (!initialized);
+        initialized = true;
+        setPublicChainlinkToken;
+
+        market.name = _market.name;
+        market.marketResolutionTimestamp = _market.marketResolutionTimestamp;
+        market.request = _market.request;
+
+
+        // market = _market;
+        for (uint x = 0; x < _market.possibleOutcomes.length; x++) {
+            highest_limit_buy.push(0);
+            lowest_limit_sell.push(100);
+            market.possibleOutcomes[x] = _market.possibleOutcomes[x];
+
         }
     }
 
 
-    // fulfill receives a uint256 data type
-    function fulfill(bytes32 _requestId, uint256 _result)
+    event InvalidChainlinkRequest(address finalizer);
+    address public last_finalizer;
+
+    modifier noReentrancy() {
+        require(
+            !locked,
+            "Reentrant call."
+            );
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    
+    function finalize(string auth_token) public noReentrancy {
+        require (now > market.marketResolutionTimestamp);
+        require (!finalized);
+
+        finalizer = msg.sender;
+        if (now > market.marketResolutionTimestamp + weekInSeconds // week passed after end of market
+        && !finalized){  // and not finalized
+            closeInvalidMarket(); 
+            finalized = true;
+            return;
+        }
+        getChainlinkResult(auth_token);
+    }
+
+
+    function closeInvalidMarket () internal returns(bool res) {
+        require (!finalized);
+        
+        address[] addressesToPay;
+
+        for(uint outcome=0;outcome<market.possibleOutcomes.length;outcome++){ // x = possible outcome
+            for(uint price=0;price<100;price++){ // all price levels
+                for(uint z=0;z<Orderbooks[outcome][price].BuyOrdersQueue.length;z++){
+                    address owner = Orderbooks[outcome][price].BuyOrdersQueue[z].owner;
+                    uint amount =Orderbooks[outcome][price].BuyOrdersQueue[z].filled*price;
+                    if(toPay[owner] == 0){
+                        addressesToPay.push(owner);
+                    }
+                    toPay[owner]+=amount;
+                }
+
+                for(z=0;z<Orderbooks[outcome][price].SellOrdersQueue.length;z++){
+                    owner = Orderbooks[outcome][price].BuyOrdersQueue[z].owner;
+                    amount = Orderbooks[outcome][price].BuyOrdersQueue[z].filled*(100-price);
+                    if(toPay[owner] == 0){
+                        addressesToPay.push(owner);
+                    }
+                    toPay[owner]+=amount;
+                }
+            }
+        }
+
+        return true; // to trigger noReentrty
+    }
+
+
+    function getChainlinkResult (string auth_token) internal {
+        bytes32 jobId;
+        address oracle;
+        Shared.ApiRequest r = market.request;
+        // newRequest takes a JobID, a callback address, and callback function as input
+        
+        Chainlink.Request memory req = buildChainlinkRequest(jobId, this, this.fulfill.selector);
+        req.add("apiPath", r.apiPath);
+        req.add("httpPostOrGet", r.httpPostOrGet);
+        req.add("getData", r.getData);
+        req.add("postData", r.postData);
+        req.add("jsonRegexString", r.jsonRegexString);
+        req.add("auth_token", auth_token);
+
+        sendChainlinkRequestTo(oracle, req, 1);
+    }
+
+    function fulfill(bytes32 _requestId, bytes32 _result)
     public
     // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
     recordChainlinkFulfillment(_requestId)
     {
-        result = _result;
-        //update_balances(result);
+        if(CHAINLINKERRORCONST == _result){ // magic constant, means error from api
+            emit InvalidChainlinkRequest(finalizer);
+            return;
+        }
+        uint result = Shared.bytesToUint(abi.encodePacked(_result));
+        eventFinalResult = result_to_index(result);
+        computeWinners();
     }
 
-    function finalize(address _oracle, bytes32 _jobId, uint256 _payment, string auth_token) 
-    public
-    {
-        require (now > market.marketResolutionTimestamp);
+    function result_to_index (uint result) internal returns(uint res) {
+        return 0;
+    }
+    
+    
 
-    // newRequest takes a JobID, a callback address, and callback function as input
-    Chainlink.Request memory req = buildChainlinkRequest(_jobId, this, this.fulfill.selector);
-    // Adds a URL with the key "get" to the request parameters
-    req.add("get", "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD");
-    // Uses input param (dot-delimited string) as the "path" in the request parameters
-    req.add("path", "USD");
-    // Adds an integer with the key "times" to the request parameters
-    req.addInt("times", 100);
-    // Sends the request with the amount of payment specified to the oracle
-    sendChainlinkRequestTo(_oracle, req, _payment);
-}
+    function computeWinners () internal returns(bool res)  {
+        require (!finalized);
+        
+
+        Order[] queue;
+
+        for(uint outcome=0;outcome<market.possibleOutcomes.length;outcome++){ 
+            for(uint price=0;price<100;price++){ // all price levels
+                ( outcome == eventFinalResult)? queue = Orderbooks[outcome][price].BuyOrdersQueue : queue = Orderbooks[outcome][price].SellOrdersQueue;
+                for(uint z=0;z<queue.length;z++){
+                    address owner = queue[z].owner;
+                    uint amount = queue[z].filled*100;
+                    if(toPay[owner] == 0){
+                        addressesToPay.push(owner);
+                    }
+                    toPay[owner]+=amount;
+                }
+            }
+        }
+    }
+
+    function doTransactions ()  internal noReentrancy returns(bool res) {
+        for(uint x=0; x<addressesToPay.length;x++){
+            address add = addressesToPay[x];
+            uint amount = toPay[add];
+            require(add.send(amount));
+        }
+        finalized = true;
+        return true; // to trigger noReentry
+    } 
+
+    
 
 }
 

@@ -8,11 +8,11 @@ contract EventFactory {
         address add;
         uint timestamp;
     }
-    uint256[] tmp;
+
     
     ContractInfo[] public allContracts;
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
-     string _getData , string _postData , string _jsonRegexString ) public {
+       string _getData , string _postData , string _jsonRegexString, Shared.Outcome[] xx ) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
             apiPath : _apiPath,
@@ -23,9 +23,18 @@ contract EventFactory {
             });
 
         if(tmp.length <2){
-            tmp.push(1);
-            tmp.push(2);
+            Shared.Outcome[] tmp;
+
+            Shared.Outcome memory ord = Shared.Outcome({
+                name:"",
+                minValue:0,
+                maxValue:4
+                });
+            tmp.push(ord);
+            tmp.push(ord);
         }
+        
+
         Shared.Market memory market = Shared.Market({
             name : _name,
             marketResolutionTimestamp : _marketResolutionTimestamp,
