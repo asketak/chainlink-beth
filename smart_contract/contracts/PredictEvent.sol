@@ -43,9 +43,9 @@ contract PredictEvent is ChainlinkClient {
     }
     
     
-    
-
-    
+    function getOutcomes () constant public returns(Shared.Outcome[] res) {
+        return market.possibleOutcomes;
+    }
     
 
     

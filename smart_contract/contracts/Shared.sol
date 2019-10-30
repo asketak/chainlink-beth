@@ -13,15 +13,18 @@ library Shared {
         string name;
         uint maxValue;
         uint minValue;
+        string strValue;
     }
-    
+
 
     // Properties for betting event
     struct Market {
         string name;
+        string description;
         uint256 marketResolutionTimestamp;
         ApiRequest request;
         Outcome[] possibleOutcomes;
+        bool outcomeIsString;
     }
 
     function bytesToUint(bytes b) public returns (uint256){

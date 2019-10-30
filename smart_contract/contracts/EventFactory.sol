@@ -15,35 +15,24 @@ contract EventFactory {
     uint allsize;
     Shared.Outcome[] tmp;
     ContractInfo[] ret;
-    function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
-       string _getData , string _postData , string _jsonRegexString) public {
+    function createContract ( string[] descriptions, uint _marketResolutionTimestamp, Shared.Outcome[] _possibleOutcomes, bool _outcomeIsString ) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
-            apiPath : _apiPath,
-            httpPostOrGet : _httpPostOrGet,
-            getData : _getData,
-            postData : _postData,
-            jsonRegexString : _jsonRegexString
+            apiPath : descriptions[2],
+            httpPostOrGet : descriptions[3],
+            getData : descriptions[4],
+            postData : descriptions[5],
+            jsonRegexString : descriptions[6]
             });
-
-        if(tmp.length <2){
-
-
-            Shared.Outcome memory ord = Shared.Outcome({
-                name:"",
-                minValue:0,
-                maxValue:4
-                });
-            tmp.push(ord);
-            tmp.push(ord);
-        }
         
 
         Shared.Market memory market = Shared.Market({
-            name : _name,
+            name : descriptions[0],
+            description : descriptions[1],
             marketResolutionTimestamp : _marketResolutionTimestamp,
             request : _request,
-            possibleOutcomes : tmp
+            possibleOutcomes : _possibleOutcomes,
+            outcomeIsString : _outcomeIsString
             });
 
         PredictEvent newContract = new PredictEvent();
