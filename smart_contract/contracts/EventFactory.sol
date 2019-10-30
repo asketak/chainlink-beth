@@ -1,3 +1,4 @@
+pragma solidity 0.4.24;
 pragma experimental ABIEncoderV2;
 
 import "./PredictEvent.sol";
@@ -10,9 +11,11 @@ contract EventFactory {
     }
 
     
-    ContractInfo[] public allContracts;
+    mapping(uint => ContractInfo) public allContracts;
+    uint allsize;
+    Shared.Outcome[] tmp;
     function createContract ( string _name, uint _marketResolutionTimestamp, string _apiPath , string _httpPostOrGet ,
-       string _getData , string _postData , string _jsonRegexString, Shared.Outcome[] xx ) public {
+       string _getData , string _postData , string _jsonRegexString) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
             apiPath : _apiPath,
@@ -23,7 +26,7 @@ contract EventFactory {
             });
 
         if(tmp.length <2){
-            Shared.Outcome[] tmp;
+
 
             Shared.Outcome memory ord = Shared.Outcome({
                 name:"",
@@ -44,12 +47,24 @@ contract EventFactory {
 
         PredictEvent newContract = new PredictEvent();
         newContract.initialize(market);
+        uint m = _marketResolutionTimestamp;
+        address a = address(newContract);
+        ContractInfo memory c = ContractInfo({
+            add: a,
+            timestamp : m});
 
-        allContracts.push(ContractInfo({add: newContract,timestamp:_marketResolutionTimestamp}));
+        allContracts[allsize] = c;
+        allsize = allsize+1;
+        
     } 
 
     function getAddressCount() public constant returns (uint) {
-        return allContracts.length;
+        return allsize;
+    }
+    
+    function getAllEvents() public constant returns(ContractInfo[]) {
+        return allContracts;
     }
 
+}
 }

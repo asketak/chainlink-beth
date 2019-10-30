@@ -177,7 +177,7 @@ contract PredictEvent is ChainlinkClient {
     }
 
     function initialize (Shared.Market _market ) public {
-        require (!initialized);
+        // require (!initialized);
         initialized = true;
         setPublicChainlinkToken;
 
@@ -190,7 +190,7 @@ contract PredictEvent is ChainlinkClient {
         for (uint x = 0; x < _market.possibleOutcomes.length; x++) {
             highest_limit_buy.push(0);
             lowest_limit_sell.push(100);
-            market.possibleOutcomes[x] = _market.possibleOutcomes[x];
+            market.possibleOutcomes.push(_market.possibleOutcomes[x]);
 
         }
     }
@@ -218,6 +218,7 @@ contract PredictEvent is ChainlinkClient {
         if (now > market.marketResolutionTimestamp + weekInSeconds // week passed after end of market
         && !finalized){  // and not finalized
             closeInvalidMarket(); 
+            doTransactions();
             finalized = true;
             return;
         }
@@ -285,6 +286,7 @@ contract PredictEvent is ChainlinkClient {
         uint result = Shared.bytesToUint(abi.encodePacked(_result));
         eventFinalResult = result_to_index(result);
         computeWinners();
+        doTransactions();
     }
 
     function result_to_index (uint result) internal returns(uint res) {
@@ -315,12 +317,14 @@ contract PredictEvent is ChainlinkClient {
     }
 
     function doTransactions ()  internal noReentrancy returns(bool res) {
+        require (!finalized);
+        finalized = true;
+        
         for(uint x=0; x<addressesToPay.length;x++){
             address add = addressesToPay[x];
             uint amount = toPay[add];
             require(add.send(amount));
         }
-        finalized = true;
         return true; // to trigger noReentry
     } 
 
