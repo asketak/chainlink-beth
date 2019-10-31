@@ -12,6 +12,7 @@ import (
 	"github.com/linkpoolio/bridges"
 	"io/ioutil"
 	"net/url"
+	"reflect"
 	"strings"
 )
 
@@ -101,7 +102,13 @@ func (cc *Api) Run(h *bridges.Helper) (interface{}, error) {
 	}
 
 	if out["data"] != nil {
-		out["data"] = fmt.Sprint(out["data"])
+		rt := reflect.TypeOf(out["data"])
+		switch rt.Kind() {
+		case reflect.Int64, reflect.Int32, reflect.Int:
+			out["data"] = fmt.Sprintf("%d", out["data"])
+		case reflect.Float32, reflect.Float64:
+			out["data"] = fmt.Sprintf("%f", out["data"])
+		}
 	}
 	return out, nil
 }

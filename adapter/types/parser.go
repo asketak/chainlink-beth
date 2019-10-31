@@ -8,7 +8,7 @@ import (
 
 // will use remaining interface and will try to apply function calls or comparisons on it
 func ParseFuncs(in interface{}, funcsPath string) interface{} {
-	if funcsPath == "" {
+	if funcsPath == "" || in == nil {
 		return in
 	}
 	selectors := strings.Split(funcsPath, ":")
@@ -114,7 +114,7 @@ func callArrayFunc(in []interface{}, funcName string) interface{} {
 
 // will use remaining interface and will try to use json-path to navigate to inner structure/value
 func ParseJsonPath(in interface{}, jsonPath string) interface{} {
-	if jsonPath == "" {
+	if jsonPath == "" || in == nil {
 		return in
 	}
 	selectors := strings.Split(jsonPath, ".")
