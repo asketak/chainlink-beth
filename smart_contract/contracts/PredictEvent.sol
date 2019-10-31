@@ -32,7 +32,7 @@ contract PredictEvent is ChainlinkClient {
         uint sellLen;
         uint buyLen;
     }
-
+    uint256 constant private ORACLE_PAYMENT = 1 * LINK;
     event logs(string agg,uint a);
     event lord(Order agg);
 
@@ -57,13 +57,14 @@ contract PredictEvent is ChainlinkClient {
     uint[] public lowest_limit_sell;
     Shared.Event public Event;
     uint public eventFinalResult;
+    uint public result;
     bool public finalized;
     bool public initialized;
     mapping (address => uint) public toPay;
     address[] public addressesToPay;
     mapping (address => uint) public deposited;
     address[] public depositedA;
-    
+    address constant public oracleAdd = 0xbd8524180968A12dcBE5C881E21DDAbd1Ba7F4a1;
 
     bool locked;
     uint maximumBumberOfOrders; // to prevent stalling contract
@@ -73,6 +74,7 @@ contract PredictEvent is ChainlinkClient {
     address finalizer;
     
     constructor() public {
+              setChainlinkToken(0x20fe562d797a42dcb3399062ae9546cd06f63280);
     }
     
     function showBooks() constant returns(uint[100][2][10] res) {
@@ -332,51 +334,77 @@ contract PredictEvent is ChainlinkClient {
         require (now > Event.eventResolutionTimestamp);
         // require (!finalized);
 
+
         finalizer = msg.sender;
-        if (now > Event.eventResolutionTimestamp + weekInSeconds // week passed after end of Event
-        && !finalized){  // and not finalized
-            doInvalidTransactions();
-            emit logs("invalidated",0);
-            finalized = true;
-            return;
-        }
+        // if (now > Event.eventResolutionTimestamp + weekInSeconds // week passed after end of Event
+        // && !finalized){  // and not finalized
+        //     doInvalidTransactions();
+        //     emit logs("invalidated",0);
+        //     finalized = true;
+        //     return;
+        // }
         getChainlinkResult(auth_token);
     }
 
 
 
-    function getChainlinkResult (string auth_token) internal {
-        bytes32 jobId;
-        address oracle;
+    function getChainlinkResult (string auth_token) public {
+        bytes32 jobId = 0x3334303639626438646463363439356438326165623437663631633261326336;
         Shared.ApiRequest storage r = Event.request;
         // newRequest takes a JobID, a callback address, and callback function as input
         
         Chainlink.Request memory req = buildChainlinkRequest(jobId, this, this.fulfill.selector);
         req.add("apiPath", r.apiPath);
         req.add("httpPostOrGet", r.httpPostOrGet);
-        req.add("getData", r.getData);
-        req.add("postData", r.postData);
+        if(bytes(r.getData).length>0){
+            req.add("getData", r.getData);
+        }
+        if(bytes(r.postData).length >0){
+            req.add("postData", r.postData);
+        }
         req.add("jsonRegexString", r.jsonRegexString);
         req.add("auth_token", auth_token);
+        req.add("copyPath", "data");
+        // req.addInt("times",1000);
 
-        sendChainlinkRequestTo(oracle, req, 1);
+
+        sendChainlinkRequestTo(oracleAdd, req, ORACLE_PAYMENT);
     }
+    
+  //     function createRequestTo(
+  //   address _oracle,
+  //   bytes32 _jobId,
+  //   uint256 _payment,
+  //   string _url,
+  //   string _path,
+  //   int256 _times
+  // )
+  //   public
+  //   returns (bytes32 requestId)
+  // {
+  //   Chainlink.Request memory req = buildChainlinkRequest(_jobId, this, this.fulfill.selector);
+  //   req.add("url", _url);
+  //   req.add("path", _path);
+  //   req.addInt("times", _times);
+  //   requestId = sendChainlinkRequestTo(_oracle, req, _payment);
+  // }
 
-    function fulfill(bytes32 _requestId, bytes32 _result)
+    function fulfill(bytes32 _requestId, uint256 _result)
     public
     // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
     recordChainlinkFulfillment(_requestId)
     {
-        if(CHAINLINKERRORCONST == _result){ // magic constant, means error from api
-            emit InvalidChainlinkRequest(finalizer);
-            return;
-        }
-        uint result = Shared.bytesToUint(abi.encodePacked(_result));
-        eventFinalResult = result_to_index(_result); // eventFinalResult is index of Event, that won
-        if (eventFinalResult != 2**256-1){
-            computeWinners();
-            sendEtherToWinners();
-        }
+        eventFinalResult = _result;
+        // if(CHAINLINKERRORCONST == _result){ // magic constant, means error from api
+        //     emit InvalidChainlinkRequest(finalizer);
+        //     return;
+        // }
+        // result = Shared.bytesToUint(abi.encodePacked(_result));
+        // eventFinalResult = result_to_index(_result); // eventFinalResult is index of Event, that won
+        // if (eventFinalResult != 2**256-1){
+        //     computeWinners();
+        //     sendEtherToWinners();
+        // }
     }
 
     function sendEtherToWinners ()  internal returns(bool res) {
