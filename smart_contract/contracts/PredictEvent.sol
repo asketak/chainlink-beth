@@ -13,9 +13,11 @@ contract PredictEvent is ChainlinkClient {
     // Orderbook to trade each possible outcome
     struct Order {
         uint amount;
+        uint price;
         address owner;
         uint filled;
         bool isBuy;
+        uint marketID;
     }
 
     // Que of all orders at that level
@@ -141,7 +143,9 @@ contract PredictEvent is ChainlinkClient {
             emit logs("BUY LIMIT ORDER",0);
             Order memory order = Order({
                 amount : _amount,
+                price : _price,
                 owner : _owner,
+                marketID : result,
                 isBuy : true,
                 filled : 0
                 });
@@ -185,8 +189,10 @@ contract PredictEvent is ChainlinkClient {
                 order = Order({
                     amount : filledThisLevel,
                     owner : _owner,
+                    price : matchprice,
                     isBuy : true,
-                    filled : filledThisLevel
+                    filled : filledThisLevel,
+                    marketID : result
                     });
                 emit lord(order);
                 Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
@@ -195,7 +201,9 @@ contract PredictEvent is ChainlinkClient {
                 if ( remaining_amount > 0 && matchprice == _price ){ // we will go for another level, just insert filled order here
                     order = Order({
                         amount : remaining_amount,
+                        marketID : result,
                         owner : _owner,
+                        price : matchprice,
                         isBuy : true,
                         filled : 0
                         });
@@ -215,6 +223,8 @@ contract PredictEvent is ChainlinkClient {
                 amount : _amount,
                 owner : _owner,
                 isBuy : false,
+                price : _price,
+                    marketID : result,
                 filled : 0
                 });
             emit lord(order);
@@ -252,6 +262,8 @@ contract PredictEvent is ChainlinkClient {
                 order = Order({
                     amount : filledThisLevel,
                     owner : _owner,
+                    price : matchprice,
+                    marketID : result,
                     isBuy : false,
                     filled : filledThisLevel
                     });
@@ -266,7 +278,9 @@ contract PredictEvent is ChainlinkClient {
                     order = Order({
                         amount : remaining_amount,
                         owner : _owner,
+                        price : matchprice,
                         isBuy : false,
+                    marketID : result,
                         filled : 0
                         });
                     emit lord(order);
