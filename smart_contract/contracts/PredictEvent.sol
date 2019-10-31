@@ -34,7 +34,14 @@ contract PredictEvent is ChainlinkClient {
     }
     uint256 constant private ORACLE_PAYMENT = 1 * LINK;
     event logs(string agg,uint a);
-    event lord(Order agg);
+    event lord(
+        uint amount,
+        uint price,
+        address owner,
+        uint filled,
+        bool isBuy,
+        uint marketID
+        );
 
     function showOrder (uint a,uint b, uint c, bool isBuy) constant public returns(Order res) {
         if(isBuy){
@@ -153,7 +160,7 @@ contract PredictEvent is ChainlinkClient {
                 });
             Orderbooks[result][_price].BuyOrdersQueue.push(order);
             Orderbooks[result][_price].unffilledBuys +=_amount;
-            emit lord(order);
+            emit lord(_amount,_price,_owner,0,true,result);
 
 
         }
@@ -196,7 +203,7 @@ contract PredictEvent is ChainlinkClient {
                     filled : filledThisLevel,
                     marketID : result
                     });
-                emit lord(order);
+                emit lord(filledThisLevel,matchprice,_owner,filledThisLevel,true,result);
                 Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
                 Orderbooks[result][matchprice].unfilledBuyOrdersPointer++; 
                 Orderbooks[result][matchprice].unffilledSells -=filledThisLevel;
@@ -209,7 +216,7 @@ contract PredictEvent is ChainlinkClient {
                         isBuy : true,
                         filled : 0
                         });
-                    emit lord(order);
+                emit lord(remaining_amount,matchprice,_owner,0,true,result);
                     Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
                     Orderbooks[result][matchprice].unffilledBuys +=remaining_amount;
 
@@ -229,9 +236,9 @@ contract PredictEvent is ChainlinkClient {
                     marketID : result,
                 filled : 0
                 });
-            emit lord(order);
             Orderbooks[result][_price].SellOrdersQueue.push(order);
             Orderbooks[result][_price].unffilledSells +=_amount;
+            emit lord(_amount,_price,_owner,0,false,result);
 
         }
 
@@ -269,7 +276,7 @@ contract PredictEvent is ChainlinkClient {
                     isBuy : false,
                     filled : filledThisLevel
                     });
-                emit lord(order);
+                emit lord(filledThisLevel,matchprice,_owner,filledThisLevel,false,result);
                 Orderbooks[result][matchprice].SellOrdersQueue.push(order);
                 Orderbooks[result][matchprice].unfilledSellOrdersPointer++; 
                 Orderbooks[result][matchprice].unffilledBuys -=filledThisLevel;
@@ -285,7 +292,7 @@ contract PredictEvent is ChainlinkClient {
                     marketID : result,
                         filled : 0
                         });
-                    emit lord(order);
+                emit lord(remaining_amount,matchprice,_owner,0,false,result);
                     Orderbooks[result][matchprice].SellOrdersQueue.push(order);
                     Orderbooks[result][matchprice].unffilledSells +=remaining_amount;
 
