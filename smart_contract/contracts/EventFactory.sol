@@ -15,7 +15,7 @@ contract EventFactory {
     uint allsize;
     Shared.Outcome[] tmp;
     ContractInfo[] ret;
-    function createContract ( string[] descriptions, uint _marketResolutionTimestamp, Shared.Outcome[] _possibleOutcomes, bool _outcomeIsString ) public {
+    function createContract ( string[] descriptions, uint _eventResolutionTimestamp, Shared.Outcome[] _possibleOutcomes, bool _outcomeIsString, bool _exactStringMatch ) public {
 
         Shared.ApiRequest memory _request = Shared.ApiRequest({
             apiPath : descriptions[2],
@@ -26,18 +26,19 @@ contract EventFactory {
             });
         
 
-        Shared.Market memory market = Shared.Market({
+        Shared.Event memory market = Shared.Event({
             name : descriptions[0],
             description : descriptions[1],
-            marketResolutionTimestamp : _marketResolutionTimestamp,
+            eventResolutionTimestamp : _eventResolutionTimestamp,
             request : _request,
             possibleOutcomes : _possibleOutcomes,
-            outcomeIsString : _outcomeIsString
+            outcomeIsString : _outcomeIsString,
+            exactStringMatch : _exactStringMatch
             });
 
         PredictEvent newContract = new PredictEvent();
         newContract.initialize(market);
-        uint m = _marketResolutionTimestamp;
+        uint m = _eventResolutionTimestamp;
         address a = address(newContract);
         ContractInfo memory c = ContractInfo({
             add: a,
