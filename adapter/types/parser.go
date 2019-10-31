@@ -21,7 +21,7 @@ func ParseFuncs(in interface{}, funcsPath string) interface{} {
 	first := selectors[0]
 	remaining := strings.Join(selectors[1:], ":")
 
-	comparisons := comparisonRe.FindAllString(first, -1)
+	comparisons := ComparisonRe.FindAllString(first, -1)
 	isComparison := len(comparisons) == 1
 	if len(comparisons) > 1 {
 		return step
@@ -52,11 +52,14 @@ func callComparissonFunc(in map[string]interface{}, comparison string, operator 
 	}
 
 	mapValue := in[operands[0]]
+	if mapValue == nil {
+		return false
+	}
 	var comparedString string
 	var comparedFloat float64
 	var isNumber bool
 
-	if submatchStrings := isStringRe.FindStringSubmatch(operands[1]); len(submatchStrings) == 0 {
+	if submatchStrings := IsStringRe.FindStringSubmatch(operands[1]); len(submatchStrings) == 0 {
 		var err error
 		comparedFloat, err = strconv.ParseFloat(operands[1], 64)
 		if err != nil {

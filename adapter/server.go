@@ -108,6 +108,10 @@ func (cc *Api) Run(h *bridges.Helper) (interface{}, error) {
 			out["data"] = fmt.Sprintf("%d", out["data"])
 		case reflect.Float32, reflect.Float64:
 			out["data"] = fmt.Sprintf("%f", out["data"])
+			if strings.Contains(out["data"].(string), ".") && !types.NonZeroRe.MatchString(out["data"].(string)) {
+				parts := strings.Split(out["data"].(string), ".")
+				out["data"] = parts[0]
+			}
 		}
 	}
 	return out, nil

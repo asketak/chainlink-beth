@@ -14,6 +14,7 @@ const (
 )
 
 var (
-	comparisonRe = regexp.MustCompile("<=|>=|!=|=|>|<")
-	isStringRe   = regexp.MustCompile("\"(.*)\"")
+	ComparisonRe = regexp.MustCompile(`<=|>=|!=|=|>|<`)
+	IsStringRe   = regexp.MustCompile(`"(.*)"`)
+	NonZeroRe    = regexp.MustCompile(`\.0*[1-9]`)
 )
