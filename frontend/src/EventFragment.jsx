@@ -22,7 +22,7 @@ export default class EventFragment extends React.Component {
 
     state = {
         inited: false,
-        address: null,
+        event: null,
         expanded: false
     }
 
@@ -35,27 +35,21 @@ export default class EventFragment extends React.Component {
     }
 
     fetchEvent(force) {
-        if (force || (!this.state.inited && this.state.address === null && this.context.w3a)) {
+        if (force || (!this.state.inited && this.state.event === null && this.context.w3a)) {
             this.setState({inited: true})
-            this.context.w3a.contracts.PredictEvent._at(this.props.address).myAddress.call()
-                .then(address => {
-                    this.setState(state => ({address}))
+
+            this.context.w3a.contracts.PredictEvent._at(this.props.address).market.call()
+                .then(event => {
+                    this.setState(state => ({event}))
                 })
         }
     }
 
     render() {
-        const expanded = this.state.expanded
-
-        const handleExpandClick = () => {
-            this.setState(state => ({expanded: !state.expanded}));
-        };
-
-        const name = "Nazev Eventu"
-        //const name = this.state.event ? this.state.event.name : "Loading ..."
+        const name = (this.state.event && this.state.event[0]) || "Loading..."
 
         const endTimestamp = this.props.endTimestamp
-        const endDateString = moment(endTimestamp).format("MMMM D YYYY, kk:mm:ss");
+        const endDateString = moment(endTimestamp).format("MMMM D YYYY   kk:mm");
 
         const description = "This impressive paella is a perfect party dish and a fun meal to cook together with your guests. Add 1 cup of frozen peas along with the mussels, if you like."
         //const description = this.state.event ? this.state.event.description : "Loading ..."
@@ -75,7 +69,7 @@ export default class EventFragment extends React.Component {
                             }
                 />
                 <CardActions className="event-card-action" style={{padding: 0}} disableSpacing>
-                        <Link to={"/markets/" + this.props.address}>
+                        <Link to={"/events/" + this.props.address}>
                             <div>Go To Event >>></div>
                         </Link>
                 </CardActions>

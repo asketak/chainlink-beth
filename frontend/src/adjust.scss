@@ -42,3 +42,45 @@
     margin-bottom: 10px;
   }
 }
+
+#EventPage {
+  .MuiTableCell-sizeSmall {
+    padding: 6px 4px 6px 4px;
+  }
+
+  .side-divider {
+    width: 2px;
+    background-color: grey;
+    margin: 0 2px;
+  }
+
+  .order-book-control {
+    width: 30%;
+    flex-grow: 1;
+    padding: 0 20px;
+
+    &.buy {
+      text-align: right;
+      input {
+        text-align: right;
+      }
+    }
+
+    &.sell {
+
+    }
+
+    > div {
+      display: flex;
+
+
+      > div {
+        flex-grow: 1;
+      }
+    }
+
+    button {
+      margin-top: 10px;
+    }
+  }
+}

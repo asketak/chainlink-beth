@@ -12,6 +12,7 @@ import Navbar from "./Navbar.jsx";
 import Footer from "./Footer.jsx";
 import HomePage from "./HomePage.jsx";
 import AllEventsPage from "./AllEventsPage.jsx";
+import EventPage from "./EventPage.jsx";
 import AccountPage from "./AccountPage.jsx";
 import CreateMarketPage from "./CreateEventPage.jsx"
 
@@ -54,15 +55,19 @@ export default hot(class App extends React.Component {
 							   render={props => <HomePage {...this.state} />}
 						/>
 
-						<Route path='/markets'
+						<Route exact path='/events'
 							   render={props => <AllEventsPage {...this.state} />}
 						/>
 
-						<Route path="/create-event"
+						<Route path='/events/:address'
+							   render={props => <EventPage {...this.state} address={props.match.params.address} />}
+						/>
+
+						<Route exact path="/create-event"
 							   render={props => <CreateMarketPage {...this.state} />}
 						/>
 
-						<Route path='/account'
+						<Route exact path='/account'
 							   render={props => <AccountPage {...this.state} />}
 						/>
 

@@ -17,11 +17,23 @@ import FavoriteIcon from '@material-ui/icons/Favorite';
 import ShareIcon from '@material-ui/icons/Share';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+import Paper from '@material-ui/core/Paper';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TablePagination from '@material-ui/core/TablePagination';
+import TableRow from '@material-ui/core/TableRow';
+import TextField from '@material-ui/core/TextField';
+import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import Fab from "@material-ui/core/Fab";
+import Divider from "@material-ui/core/Divider";
 
 import AppContext from "./AppContext";
 import RemainingTimeSpan from "./RemainingTimeSpan.jsx";
+import moment from "moment";
 
-export default class EventFragment extends React.Component {
+export default class EventPage extends React.Component {
 
     static contextType = AppContext
 
@@ -31,26 +43,106 @@ export default class EventFragment extends React.Component {
 
     state = {
         inited: false,
-        address: null,
-        expanded: false
+        markets: null,
+        marketExpanded: [],
+        marketActionMap: {}
     }
 
     componentDidMount() {
-        this.fetchEvent()
+        this.initEvent()
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        this.fetchEvent()
+        this.initEvent()
     }
 
-    fetchEvent(force) {
-        if (force || (!this.state.inited && this.state.address === null && this.context.w3a)) {
+    betFunction = (marketId, isBuy) => {
+        const sideText = isBuy ? "yes" : "no"
+        const price = document.getElementById(sideText + "-price" + marketId).value
+        const amount = document.getElementById(sideText + "-amount" + marketId).value
+
+        const amountToPay = isBuy ? (price * amount) : ((100 - price) * amount)
+
+        this.setState(state => ({marketActionMap: {...state.marketActionMap, [marketId]: true}}))
+
+        this.context.w3a.contracts.PredictEvent._at(this.props.address).placeOrder.send(
+            amountToPay * 100000000000000,
+            price,
+            amount,
+            isBuy,
+            marketId
+        )
+            .then(rest => {
+                console.log("BETTING COMPLETE")
+            })
+            .catch(e => {
+                debugger
+            })
+            .finally(() => {
+                this.setState(state => ({marketActionMap: {...state.marketActionMap, [marketId]: false}}))
+            })
+    }
+
+    initEvent(force) {
+        if (force || (!this.state.inited && this.state.markets === null && this.context.w3a)) {
             this.setState({inited: true})
-            this.context.w3a.contracts.PredictEvent._at(this.props.address).myAddress.call()
-                .then(address => {
-                    this.setState(state => ({address}))
+
+            this.context.w3a.addEventListener('newBlock', (e) => {
+                console.log('Instance fired "something".', e);
+                this.fetchMarkets()
+            });
+
+            this.context.w3a.contracts.PredictEvent._at(this.props.address).market.call()
+                .then(eventInfo => {
+                    const extra = eventInfo[2]
+                    this.setState(state => ({
+                        name: eventInfo[0],
+                        endTimestamp: eventInfo[1],
+                        apiPath: extra.apiPath,
+                        getData: extra.getData,
+                        postData: extra.postData,
+                        httpPostOrGet: extra.jsonRegexString,
+                        jsonRegexString: extra.jsonRegexString,
+                    }))
+                    this.fetchMarkets()
                 })
         }
+    }
+
+    fetchMarkets() {
+        function toOrderViewData(inputData, isBuy) {
+            let amountSum = 0
+            const orders = inputData
+                .map((amountString, index) => {
+                        return {
+                            price: index,
+                            amount: parseInt(amountString)
+                        }
+                    }
+                )
+                .filter(priceLevel => priceLevel.amount !== 0)
+
+            if (isBuy) {
+                orders.reverse()
+            }
+
+            orders.forEach(priceLevel => {
+                    amountSum += priceLevel.amount
+                    priceLevel.amountSum = amountSum
+                }
+            )
+            return orders
+        }
+
+        this.context.w3a.contracts.PredictEvent._at(this.props.address).showBooks.call()
+            .then(markets => {
+                this.setState(state => ({
+                    markets: markets.map(market => ({
+                        buySide: toOrderViewData(market[0], true),
+                        sellSide: toOrderViewData(market[1], false)
+                    }))
+                }))
+            })
     }
 
     handleExpandClick = () => {
@@ -60,77 +152,200 @@ export default class EventFragment extends React.Component {
     }
 
     render() {
+        const name = this.state.name || "Loading..."
 
+        const endTimestamp = this.state.endTimestamp || null
+        const endDateString = endTimestamp ? moment(endTimestamp).format("MMMM D YYYY   kk:mm") : "Loading..."
 
-
-        const endTimestamp = this.props.endTimestamp
-        const endDateString = "September 14 2016 12:30";
-
+        const description = "This impressive paella is a perfect party dish and a fun meal to cook together with your guests. Add 1 cup of frozen peas along with the mussels, if you like."
+        //const description = this.state.description ? this.state.description : "Loading..."
 
         return (
-            <Card>
-                <CardHeader className="event-head"
-                            style={{backgroundImage: "linear-gradient(to bottom, rgba(245, 246, 252, 0.52), rgba(117, 19, 93, 0.73)) url('/img/trump1.jpg')"}}
-                            title={
-                                <div>
-                                    <h3>Nazev Eventu</h3>
-                                    <h5>EndDate: {endDateString} in (<RemainingTimeSpan endTimestamp={endTimestamp}/>)</h5>
-                                </div>
-                            }
-                            subheader={
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                    This impressive paella is a perfect party dish and a fun meal to cook together with your
-                                    guests. Add 1 cup of frozen peas along with the mussels, if you like.
-                                </Typography>
-                            }
-                />
-                <CardContent>
-                    Sazky
-                </CardContent>
+            <div id="EventPage" className="container-content">
+                <section className="container">
+                    <Card>
+                        <CardHeader className="event-head"
+                                    title={
+                                        <div>
+                                            <h2>{name}</h2>
+                                            <h5>Ends: {endDateString} in (<RemainingTimeSpan
+                                                endTimestamp={endTimestamp}/>)</h5>
+                                        </div>
+                                    }
+                                    subheader={<Typography variant="body2" color="textSecondary"
+                                                           component="p">{description}</Typography>}
+                        />
+                        {this.state.markets ? (
+                            this.state.markets.map((market, index) =>
+                                this.renderMarket(market, index)
+                            )
+                        ) : (
+                            <CardContent>No markets</CardContent>
+                        )}
+                    </Card>
+                </section>
+            </div>
+        )
+    }
 
-                <CardActions disableSpacing>
-                    <IconButton aria-label="add to favorites">
-                        <FavoriteIcon/>
-                    </IconButton>
-                    <IconButton aria-label="share">
-                        <ShareIcon/>
-                    </IconButton>
-                    <IconButton styles={{
-                        transform: "rotate(" + (expanded ? 180 : 0) + "deg)",
-                        marginLeft: 'auto',
-                        transition: "transform 300",
-                    }} onClick={handleExpandClick} aria-label="show more">
-                        <ExpandMoreIcon/>
-                    </IconButton>
-                </CardActions>
-                <Collapse in={expanded} timeout="auto" unmountOnExit>
-                    <CardContent>
-                        <Typography paragraph>Method:</Typography>
-                        <Typography paragraph>
-                            Heat 1/2 cup of the broth in a pot until simmering, add saffron and set aside for 10
-                            minutes.
-                        </Typography>
-                        <Typography paragraph>
-                            Heat oil in a (14- to 16-inch) paella pan or a large, deep skillet over medium-high
-                            heat. Add chicken, shrimp and chorizo, and cook, stirring occasionally until lightly
-                            browned, 6 to 8 minutes. Transfer shrimp to a large plate and set aside, leaving chicken
-                            and chorizo in the pan. Add pimentón, bay leaves, garlic, tomatoes, onion, salt and
-                            pepper, and cook, stirring often until thickened and fragrant, about 10 minutes. Add
-                            saffron broth and remaining 4 1/2 cups chicken broth; bring to a boil.
-                        </Typography>
-                        <Typography paragraph>
-                            Add rice and stir very gently to distribute. Top with artichokes and peppers, and cook
-                            without stirring, until most of the liquid is absorbed, 15 to 18 minutes. Reduce heat to
-                            medium-low, add reserved shrimp and mussels, tucking them down into the rice, and cook
-                            again without stirring, until mussels have opened and rice is just tender, 5 to 7
-                            minutes more. (Discard any mussels that don’t open.)
-                        </Typography>
-                        <Typography>
-                            Set aside off of the heat to let rest for 10 minutes, and then serve.
-                        </Typography>
+    renderMarket(market, index) {
+
+        //<Collapse in={this.state.marketExpanded[index]} timeout="auto" unmountOnExit>
+        return (
+            <div key={index}>
+                <CardContent>
+                    Solution {index}:
+                </CardContent>
+                <Collapse in={true} timeout="auto" unmountOnExit>
+                    <CardContent style={{display: "flex"}}>
+                        {this.renderOrderSideControls(true, market, index)}
+                        {this.renderOrderSideTable(true, market.buySide)}
+                        <div key="separator" className="side-divider"/>
+                        {this.renderOrderSideTable(false, market.sellSide)}
+                        {this.renderOrderSideControls(false, market, index)}
                     </CardContent>
                 </Collapse>
-            </Card>
+            </div>
+        )
+    }
+
+    renderOrderSideControls(isBuy, market, marketId) {
+        const sideText = isBuy ? "yes" : "no"
+        const marketSide = isBuy ? market.buySide : market.sellSide
+
+        const defaultPrice = isBuy ? (marketSide.length > 0 ? marketSide[0].price + 1 : 1) : (marketSide.length > 0 ? marketSide[0].price - 1 : 99)
+        const defaultAmount = 1
+
+        const sum = defaultPrice * defaultAmount
+        const otherSum = (100 - defaultPrice) * defaultAmount
+
+        const canWin = isBuy ? otherSum : sum
+        const canLose = isBuy ? sum : otherSum
+
+        function recalculate() {
+            const price = document.getElementById(sideText + "-price" + marketId).value
+            const amount = document.getElementById(sideText + "-amount" + marketId).value
+            const canWin = (100 - price) * amount
+            const canLose = price * amount
+            document.getElementById(sideText + "-canwin" + marketId).value = (isBuy ? canWin : canLose)
+            document.getElementById(sideText + "-canlose" + marketId).value = (isBuy ? canLose : canWin)
+        }
+
+        return (
+            <div key={sideText + "Controls"} className={"order-book-control " + (isBuy ? "buy" : "sell")}>
+
+                <div style={{flexDirection: (isBuy ? "row": "row-reverse")}}>
+                    <div>
+                        <TextField
+                            id={sideText + "-canwin" + marketId}
+                            label="You Can Win:"
+                            type="number"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            defaultValue={canWin}
+                            margin="normal"
+                            variant="outlined"
+                            disabled
+                        />
+                        <TextField
+                            id={sideText + "-canlose" + marketId}
+                            label="You Can Lose:"
+                            type="number"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            defaultValue={canLose}
+                            margin="normal"
+                            variant="outlined"
+                            disabled
+                        />
+                    </div>
+                    <div style={{width: "40px"}}/>
+                    <div>
+                        <TextField
+                            id={sideText + "-price" + marketId}
+                            label={(isBuy ? "Bet YES" : "Bet NO") + " Price:"}
+                            type="number"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            defaultValue={defaultPrice}
+                            margin="normal"
+                            variant="outlined"
+                            onChange={recalculate}
+                        />
+                        <TextField
+                            id={sideText + "-amount" + marketId}
+                            label="Amount:"
+                            type="number"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            defaultValue={1}
+                            margin="normal"
+                            variant="outlined"
+                            onChange={recalculate}
+                        />
+                    </div>
+                </div>
+                <Fab
+                    variant="extended"
+                    size="large"
+                    color="primary"
+                    style={{backgroundColor: isBuy ? "green" : "red"}}
+                    onClick={() => this.betFunction(marketId, isBuy)}
+                >
+                    <ShoppingCartIcon/>
+                    {isBuy ? "Bet YES" : "Bet NO"}
+                </Fab>
+            </div>
+        )
+    }
+
+    renderOrderSideTable(isBuy, rows) {
+        const columns = [
+            {id: 'amountSum', label: 'Sum', minWidth: 60, align: 'center'},
+            {id: 'amount', label: 'Amount', minWidth: 70, align: 'center'},
+            {id: 'price', label: isBuy ? "Bid" : "Ask", minWidth: 40, align: 'center'}
+        ];
+
+        columns.reverse()
+
+        return (
+            <div key={(isBuy ? "buy" : "sell") + "OrderBook"} style={{maxHeight: "200px", overflowY: "auto", direction: isBuy ? "rtl" : "ltr"}}>
+                <Table stickyHeader size="small" aria-label="sticky table">
+                    <TableHead>
+                        <TableRow>
+                            {columns.map(column => (
+                                <TableCell
+                                    key={column.id}
+                                    align={column.align}
+                                    style={{minWidth: column.minWidth}}
+                                >
+                                    {column.label}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {rows.map(row => {
+                            return (
+                                <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                                    {columns.map(column => {
+                                        const value = row[column.id];
+                                        return (
+                                            <TableCell key={column.id} align={column.align}>
+                                                {value}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
         )
     }
 }

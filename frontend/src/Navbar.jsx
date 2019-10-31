@@ -15,7 +15,7 @@ export default class Navbar extends React.Component {
                         <Link className="navbar-brand" to="/">BETH</Link>
                         <ul className="navbar-nav ml-auto">
                             <li className="nav-item">
-                                <Link className="nav-link" to="/markets">Markets</Link>
+                                <Link className="nav-link" to="/events">Markets</Link>
                             </li>
                             <AccountNavbarArea userAddress={appContext.userAddress}/>
                         </ul>

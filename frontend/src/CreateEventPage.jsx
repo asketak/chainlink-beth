@@ -23,15 +23,16 @@ export default class CreateEventPage extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
     }
 
-    createMarketClick = (e) => {
+    createEventClick = (e) => {
         e.preventDefault()
         this.setState(state => ({running: true}))
         const request = {}
-        document.querySelectorAll("#create-market-form input").forEach(input => {
+        document.querySelectorAll("#create-event-form input").forEach(input => {
             request[input.id] = (input.id === "timestamp" ? parseInt(input.value) : input.value)
         })
 
         this.context.w3a.contracts.EventFactory.createContract.send(
+            null,
             request.name,
             moment(request.endTimestamp).valueOf(),
             request.apiPath,
@@ -41,7 +42,7 @@ export default class CreateEventPage extends React.Component {
             request.jsonRegex
         )
             .then(rest => {
-                window.location.href = "/markets";
+                window.location.href = "/events";
             })
             .catch(e => {
                 debugger
@@ -113,7 +114,7 @@ export default class CreateEventPage extends React.Component {
                     <h1>Create Event</h1>
                     <Card>
                         <CardContent>
-                            <form id="create-market-form">
+                            <form id="create-event-form">
                                 <div className="row">
 
                                     {inputs.map(input =>
@@ -125,7 +126,7 @@ export default class CreateEventPage extends React.Component {
                                                 variant="contained"
                                                 color="primary"
                                                 disabled={this.state.running}
-                                                onClick={this.createMarketClick}>
+                                                onClick={this.createEventClick}>
                                             {
                                                 this.state.running ?
                                                     <div className="spinner-border text-warning" role="status">

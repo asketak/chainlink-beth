@@ -1,6 +1,6 @@
 export default {
 	EventFactory: {
-		address: "0xaF6aC95e47683e926AF16b1b72E246BAcb2A4ae2",
+		address: "0xf8813b79Fe692bE6a55b9a96e74A43139098CE79",
 		"abi": [
 			{
 				"constant": true,
@@ -128,11 +128,25 @@ export default {
 			{
 				"constant": true,
 				"inputs": [],
-				"name": "myAddress",
+				"name": "eventFinalResult",
 				"outputs": [
 					{
 						"name": "",
-						"type": "address"
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "initialized",
+				"outputs": [
+					{
+						"name": "",
+						"type": "bool"
 					}
 				],
 				"payable": false,
@@ -189,6 +203,77 @@ export default {
 					{
 						"name": "",
 						"type": "uint256"
+					},
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "Orderbooks",
+				"outputs": [
+					{
+						"name": "unfilledBuyOrdersPointer",
+						"type": "uint256"
+					},
+					{
+						"name": "unffilledBuys",
+						"type": "uint256"
+					},
+					{
+						"name": "unfilledSellOrdersPointer",
+						"type": "uint256"
+					},
+					{
+						"name": "unffilledSells",
+						"type": "uint256"
+					},
+					{
+						"name": "sellLen",
+						"type": "uint256"
+					},
+					{
+						"name": "buyLen",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "finalized",
+				"outputs": [
+					{
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "last_finalizer",
+				"outputs": [
+					{
+						"name": "",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"name": "highest_limit_buy",
@@ -207,6 +292,65 @@ export default {
 				"payable": false,
 				"stateMutability": "nonpayable",
 				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"name": "agg",
+						"type": "string"
+					},
+					{
+						"indexed": false,
+						"name": "a",
+						"type": "uint256"
+					}
+				],
+				"name": "logs",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"components": [
+							{
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"name": "filled",
+								"type": "uint256"
+							},
+							{
+								"name": "isBuy",
+								"type": "bool"
+							}
+						],
+						"indexed": false,
+						"name": "agg",
+						"type": "tuple"
+					}
+				],
+				"name": "lord",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"name": "finalizer",
+						"type": "address"
+					}
+				],
+				"name": "InvalidChainlinkRequest",
+				"type": "event"
 			},
 			{
 				"anonymous": false,
@@ -245,29 +389,108 @@ export default {
 				"type": "event"
 			},
 			{
-				"constant": false,
+				"constant": true,
 				"inputs": [
 					{
-						"name": "_price",
+						"name": "a",
 						"type": "uint256"
 					},
 					{
-						"name": "_amount",
+						"name": "b",
 						"type": "uint256"
 					},
 					{
-						"name": "_owner",
-						"type": "address"
+						"name": "c",
+						"type": "uint256"
 					},
 					{
-						"name": "result",
+						"name": "isBuy",
+						"type": "bool"
+					}
+				],
+				"name": "showOrder",
+				"outputs": [
+					{
+						"components": [
+							{
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"name": "owner",
+								"type": "address"
+							},
+							{
+								"name": "filled",
+								"type": "uint256"
+							},
+							{
+								"name": "isBuy",
+								"type": "bool"
+							}
+						],
+						"name": "res",
+						"type": "tuple"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "showBooks",
+				"outputs": [
+					{
+						"name": "res",
+						"type": "uint256[100][2][10]"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "a",
 						"type": "uint256"
 					}
 				],
-				"name": "placeBuyOrder",
-				"outputs": [],
+				"name": "showBook",
+				"outputs": [
+					{
+						"name": "res",
+						"type": "uint256[100][2][10]"
+					}
+				],
 				"payable": false,
-				"stateMutability": "nonpayable",
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "_marketID",
+						"type": "uint256"
+					}
+				],
+				"name": "computeLimits",
+				"outputs": [
+					{
+						"name": "buy",
+						"type": "uint256"
+					},
+					{
+						"name": "sell",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -282,18 +505,18 @@ export default {
 						"type": "uint256"
 					},
 					{
-						"name": "_owner",
-						"type": "address"
+						"name": "_isBuy",
+						"type": "bool"
 					},
 					{
-						"name": "result",
+						"name": "_marketID",
 						"type": "uint256"
 					}
 				],
-				"name": "placeSellOrder",
+				"name": "placeOrder",
 				"outputs": [],
-				"payable": false,
-				"stateMutability": "nonpayable",
+				"payable": true,
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -336,8 +559,22 @@ export default {
 								"type": "tuple"
 							},
 							{
+								"components": [
+									{
+										"name": "name",
+										"type": "string"
+									},
+									{
+										"name": "maxValue",
+										"type": "uint256"
+									},
+									{
+										"name": "minValue",
+										"type": "uint256"
+									}
+								],
 								"name": "possibleOutcomes",
-								"type": "uint256[]"
+								"type": "tuple[]"
 							}
 						],
 						"name": "_market",
@@ -354,23 +591,11 @@ export default {
 				"constant": false,
 				"inputs": [
 					{
-						"name": "_price",
-						"type": "uint256"
-					},
-					{
-						"name": "_amount",
-						"type": "uint256"
-					},
-					{
-						"name": "_isBuy",
-						"type": "bool"
-					},
-					{
-						"name": "result",
-						"type": "uint256"
+						"name": "auth_token",
+						"type": "string"
 					}
 				],
-				"name": "placeOrder",
+				"name": "finalize",
 				"outputs": [],
 				"payable": false,
 				"stateMutability": "nonpayable",
@@ -385,36 +610,10 @@ export default {
 					},
 					{
 						"name": "_result",
-						"type": "uint256"
+						"type": "bytes32"
 					}
 				],
 				"name": "fulfill",
-				"outputs": [],
-				"payable": false,
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"constant": false,
-				"inputs": [
-					{
-						"name": "_oracle",
-						"type": "address"
-					},
-					{
-						"name": "_jobId",
-						"type": "bytes32"
-					},
-					{
-						"name": "_payment",
-						"type": "uint256"
-					},
-					{
-						"name": "auth_token",
-						"type": "string"
-					}
-				],
-				"name": "finalize",
 				"outputs": [],
 				"payable": false,
 				"stateMutability": "nonpayable",

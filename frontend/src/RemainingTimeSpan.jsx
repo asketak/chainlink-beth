@@ -11,7 +11,7 @@ export default class RemainingTimeSpan extends React.Component {
     domElement = React.createRef()
 
     updateRemainngTimeElement = () => {
-        const remainingTimeText = moment(this.props.endTimestamp).fromNow()
+        const remainingTimeText = this.props.endTimestamp ? moment(this.props.endTimestamp).fromNow() : ""
         this.domElement.current.innerHTML = remainingTimeText
     }
 

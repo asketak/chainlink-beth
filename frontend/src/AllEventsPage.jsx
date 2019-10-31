@@ -88,7 +88,7 @@ export default class AllEventsPage extends React.Component {
                     <div className="row">
                         {(allEvents || []).map(event => (
                                 <div key={event.add} className="col-lg-6 mb-4">
-                                    <EventFragment address={event.add} endTimestamp={1574009564000}/>
+                                    <EventFragment address={event.add} endTimestamp={event.timestamp}/>
                                 </div>
                             )
                         )}

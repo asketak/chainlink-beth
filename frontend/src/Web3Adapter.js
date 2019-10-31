@@ -2,13 +2,15 @@ import Web3 from "web3";
 
 import deployedContracts from "./deployedContracts.js";
 
-export default class Web3Adapter {
+export default class Web3Adapter extends EventTarget {
     constructor(web3Provider, changeContext) {
+        super()
+
         this.web3 = new Web3(web3Provider)
         this.changeContext = changeContext
         this.userAcc = null
 
-        this.gasPrice = this.web3.utils.toWei("30", "gwei")
+        this.gasPrice = this.web3.utils.toWei("0.1", "gwei")
 
         this.nextActionNumber = 1
 
@@ -37,8 +39,8 @@ export default class Web3Adapter {
                     call: async function (...args) {
                         return await w3a.contractCall(wrappededContract._contract.methods[methodName](...args))
                     },
-                    send: async function (...args) {
-                        return await w3a.contractSend(wrappededContract._contract.methods[methodName](...args))
+                    send: async function (weiAmount, ...args) {
+                        return await w3a.contractSend(wrappededContract._contract.methods[methodName](...args), weiAmount)
                     }
                 }
             })
@@ -85,15 +87,36 @@ export default class Web3Adapter {
             })
 
         this.web3.currentProvider.on('accountsChanged', (accounts) => {
-            switchAccount(web3.currentProvider.selectedAddress) // should be like accounts[0]
+            switchAccount(this.web3.currentProvider.selectedAddress) // should be like accounts[0]
         })
+
+        var subscription = this.web3.eth.subscribe('newBlockHeaders', (error, result) => {
+            if (!error) {
+                this.dispatchEvent(new Event('newBlock'));
+            } else {
+                console.error("Error when subcribing to new blocks" + error);
+            }
+        })
+
+        /*// unsubscribes the subscription
+        subscription.unsubscribe(function(error, success){
+            if (success) {
+                console.log('Successfully unsubscribed!');
+            }
+        });*/
     }
 
-    async contractSend(contractMethod) {
+    async contractSend(contractMethod, weiAmount) {
         const actionNumber = this.nextActionNumber++
         try {
             console.log("Contract send #(" + this.nextActionNumber + "): " + contractMethod._method.name + "(" + JSON.stringify(contractMethod.arguments) + ")")
-            const receipt = await contractMethod.send({from: this.userAcc, gasPrice: this.gasPrice});
+            const sendParams = {
+                from: this.userAcc,
+                gasPrice: this.gasPrice
+            }
+            if (weiAmount !== null) sendParams.value = weiAmount
+
+            const receipt = await contractMethod.send(sendParams);
             console.log("Contract send RECEIPT #(" + actionNumber + "): " + contractMethod._method.name)
             console.log(receipt)
             return receipt
