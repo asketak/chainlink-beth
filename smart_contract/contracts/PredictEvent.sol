@@ -287,6 +287,7 @@ contract PredictEvent is ChainlinkClient {
         Event.name = _Event.name;
         Event.eventResolutionTimestamp = _Event.eventResolutionTimestamp;
         Event.request = _Event.request;
+        Event.description = _Event.description;
 
 
         // Event = _Event;
