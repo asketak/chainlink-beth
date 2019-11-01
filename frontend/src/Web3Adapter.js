@@ -94,7 +94,7 @@ export default class Web3Adapter extends EventTarget {
             if (!error) {
                 this.dispatchEvent(new Event('newBlock'));
             } else {
-                console.error("Error when subcribing to new blocks" + error);
+                console.error("Error when subcribing to new blocks", error);
             }
         })
 

@@ -1,6 +1,6 @@
 export default {
 	EventFactory: {
-		address: "0xf8813b79Fe692bE6a55b9a96e74A43139098CE79",
+		address: "0xF3eBa2214FF156B2EF46d6A3e3519c35C9567cFF",
 		"abi": [
 			{
 				"constant": true,
@@ -29,32 +29,42 @@ export default {
 				"constant": false,
 				"inputs": [
 					{
-						"name": "_name",
-						"type": "string"
+						"name": "descriptions",
+						"type": "string[]"
 					},
 					{
-						"name": "_marketResolutionTimestamp",
+						"name": "_eventResolutionTimestamp",
 						"type": "uint256"
 					},
 					{
-						"name": "_apiPath",
-						"type": "string"
+						"components": [
+							{
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"name": "maxValue",
+								"type": "uint256"
+							},
+							{
+								"name": "minValue",
+								"type": "uint256"
+							},
+							{
+								"name": "strValue",
+								"type": "string"
+							}
+						],
+						"name": "_possibleOutcomes",
+						"type": "tuple[]"
 					},
 					{
-						"name": "_httpPostOrGet",
-						"type": "string"
+						"name": "_outcomeIsString",
+						"type": "bool"
 					},
 					{
-						"name": "_getData",
-						"type": "string"
-					},
-					{
-						"name": "_postData",
-						"type": "string"
-					},
-					{
-						"name": "_jsonRegexString",
-						"type": "string"
+						"name": "_exactStringMatch",
+						"type": "bool"
 					}
 				],
 				"name": "createContract",
@@ -155,15 +165,57 @@ export default {
 			},
 			{
 				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "toPay",
+				"outputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "addressesToPay",
+				"outputs": [
+					{
+						"name": "",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
 				"inputs": [],
-				"name": "market",
+				"name": "Event",
 				"outputs": [
 					{
 						"name": "name",
 						"type": "string"
 					},
 					{
-						"name": "marketResolutionTimestamp",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"name": "eventResolutionTimestamp",
 						"type": "uint256"
 					},
 					{
@@ -191,6 +243,28 @@ export default {
 						],
 						"name": "request",
 						"type": "tuple"
+					},
+					{
+						"name": "outcomeIsString",
+						"type": "bool"
+					},
+					{
+						"name": "exactStringMatch",
+						"type": "bool"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "result",
+				"outputs": [
+					{
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"payable": false,
@@ -242,12 +316,64 @@ export default {
 			},
 			{
 				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "depositedA",
+				"outputs": [
+					{
+						"name": "",
+						"type": "address"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
 				"inputs": [],
 				"name": "finalized",
 				"outputs": [
 					{
 						"name": "",
 						"type": "bool"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "deposited",
+				"outputs": [
+					{
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "oracleAdd",
+				"outputs": [
+					{
+						"name": "",
+						"type": "address"
 					}
 				],
 				"payable": false,
@@ -314,27 +440,34 @@ export default {
 				"anonymous": false,
 				"inputs": [
 					{
-						"components": [
-							{
-								"name": "amount",
-								"type": "uint256"
-							},
-							{
-								"name": "owner",
-								"type": "address"
-							},
-							{
-								"name": "filled",
-								"type": "uint256"
-							},
-							{
-								"name": "isBuy",
-								"type": "bool"
-							}
-						],
 						"indexed": false,
-						"name": "agg",
-						"type": "tuple"
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"name": "price",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"name": "filled",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"name": "isBuy",
+						"type": "bool"
+					},
+					{
+						"indexed": false,
+						"name": "marketID",
+						"type": "uint256"
 					}
 				],
 				"name": "lord",
@@ -417,6 +550,10 @@ export default {
 								"type": "uint256"
 							},
 							{
+								"name": "price",
+								"type": "uint256"
+							},
+							{
 								"name": "owner",
 								"type": "address"
 							},
@@ -427,10 +564,46 @@ export default {
 							{
 								"name": "isBuy",
 								"type": "bool"
+							},
+							{
+								"name": "marketID",
+								"type": "uint256"
 							}
 						],
 						"name": "res",
 						"type": "tuple"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [],
+				"name": "getOutcomes",
+				"outputs": [
+					{
+						"components": [
+							{
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"name": "maxValue",
+								"type": "uint256"
+							},
+							{
+								"name": "minValue",
+								"type": "uint256"
+							},
+							{
+								"name": "strValue",
+								"type": "string"
+							}
+						],
+						"name": "res",
+						"type": "tuple[]"
 					}
 				],
 				"payable": false,
@@ -474,7 +647,7 @@ export default {
 				"constant": true,
 				"inputs": [
 					{
-						"name": "_marketID",
+						"name": "_EventID",
 						"type": "uint256"
 					}
 				],
@@ -509,7 +682,7 @@ export default {
 						"type": "bool"
 					},
 					{
-						"name": "_marketID",
+						"name": "_EventID",
 						"type": "uint256"
 					}
 				],
@@ -529,7 +702,11 @@ export default {
 								"type": "string"
 							},
 							{
-								"name": "marketResolutionTimestamp",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"name": "eventResolutionTimestamp",
 								"type": "uint256"
 							},
 							{
@@ -571,13 +748,25 @@ export default {
 									{
 										"name": "minValue",
 										"type": "uint256"
+									},
+									{
+										"name": "strValue",
+										"type": "string"
 									}
 								],
 								"name": "possibleOutcomes",
 								"type": "tuple[]"
+							},
+							{
+								"name": "outcomeIsString",
+								"type": "bool"
+							},
+							{
+								"name": "exactStringMatch",
+								"type": "bool"
 							}
 						],
-						"name": "_market",
+						"name": "_Event",
 						"type": "tuple"
 					}
 				],
@@ -605,16 +794,68 @@ export default {
 				"constant": false,
 				"inputs": [
 					{
+						"name": "auth_token",
+						"type": "string"
+					}
+				],
+				"name": "getChainlinkResult",
+				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
 						"name": "_requestId",
 						"type": "bytes32"
 					},
 					{
 						"name": "_result",
-						"type": "bytes32"
+						"type": "uint256"
 					}
 				],
 				"name": "fulfill",
 				"outputs": [],
+				"payable": false,
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"name": "_bytes32",
+						"type": "bytes32"
+					}
+				],
+				"name": "bytes32ToStr",
+				"outputs": [
+					{
+						"name": "",
+						"type": "string"
+					}
+				],
+				"payable": false,
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"constant": false,
+				"inputs": [
+					{
+						"name": "x",
+						"type": "address"
+					}
+				],
+				"name": "toString",
+				"outputs": [
+					{
+						"name": "",
+						"type": "string"
+					}
+				],
 				"payable": false,
 				"stateMutability": "nonpayable",
 				"type": "function"

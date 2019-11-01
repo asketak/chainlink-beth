@@ -19,11 +19,7 @@ export default class IntroHeading extends React.Component {
 
 	render() {
 		return (
-			<header className="bg-primary py-5 mb-5">
-				<div className="container h-100">
-
-				</div>
-			</header>
+			null
 		)
 	}
 }

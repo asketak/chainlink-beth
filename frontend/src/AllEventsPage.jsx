@@ -5,6 +5,8 @@ import AppContext from "./AppContext";
 import EventFragment from "./EventFragment.jsx";
 import {Button} from "@material-ui/core";
 
+import moment from "moment"
+
 export default class AllEventsPage extends React.Component {
 
     static contextType = AppContext
@@ -66,27 +68,41 @@ export default class AllEventsPage extends React.Component {
 
     render() {
         const allEvents = this.state.allEvents
+        const futureEvents = []
+        const finalizedEvents = []
+
+        allEvents && allEvents
+            .sort((event1, event2) => parseInt(event1.timestamp) - parseInt(event2.timestamp))
+            .forEach(event => {
+                event.timestamp = parseInt(event.timestamp) * 1000
+                if (moment(event.timestamp).isBefore(moment())) {
+                    finalizedEvents.push(event)
+                } else {
+                    futureEvents.push(event)
+                }
+            })
 
         return (
             <div id="AllEventsPage" className="container-content">
                 <section className="container">
-                    <h1 style={{position: "relative", marginBottom:"20px"}}>
+                    <h1 style={{position: "relative", marginBottom: "20px"}}>
                         All&nbsp;
                         <b>
                             {allEvents
-                                ? allEvents.length
+                                ? futureEvents.length
                                 : <div className="spinner-border text-warning" role="status"/>}
                         </b>
-                        &nbsp;Markets:
+                        &nbsp;Events:
                         <Link to={"/create-event"}>
-                            <Button style={{position: "absolute", right: 0}} size="large" variant="contained" color="primary">
+                            <Button style={{position: "absolute", right: 0}} size="large" variant="contained"
+                                    color="primary">
                                 Create Event
                             </Button>
                         </Link>
                     </h1>
 
                     <div className="row">
-                        {(allEvents || []).map(event => (
+                        {futureEvents.map(event => (
                                 <div key={event.add} className="col-lg-6 mb-4">
                                     <EventFragment address={event.add} endTimestamp={event.timestamp}/>
                                 </div>
@@ -94,9 +110,17 @@ export default class AllEventsPage extends React.Component {
                         )}
                     </div>
 
-                    <h1 style={{position: "relative", marginBottom:"20px"}}>
+                    <h1 style={{position: "relative", marginBottom: "20px"}}>
                         Finished Events:
                     </h1>
+                    <div className="row">
+                        {finalizedEvents.map(event => (
+                                <div key={event.add} className="col-lg-6 mb-4">
+                                    <EventFragment address={event.add} endTimestamp={event.timestamp} finalized={true}/>
+                                </div>
+                            )
+                        )}
+                    </div>
                 </section>
             </div>
         )

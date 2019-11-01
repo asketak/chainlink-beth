@@ -14,8 +14,10 @@ export default class Navbar extends React.Component {
                     <div className="container">
                         <Link className="navbar-brand" to="/">BETH</Link>
                         <ul className="navbar-nav ml-auto">
-                            <li className="nav-item">
-                                <Link className="nav-link" to="/events">Markets</Link>
+                            <li className="nav-item" style={{position: "absolute", left: "47%"}}>
+                                <Link className="nav-link" style={{padding: "0"}} to="/events">
+                                    <button className="btn btn-primary" style={{fontSize: "20px", textDecoration: "underline"}} type="button">Events</button>
+                                </Link>
                             </li>
                             <AccountNavbarArea userAddress={appContext.userAddress}/>
                         </ul>
@@ -46,9 +48,7 @@ class AccountNavbarArea extends React.Component {
         const addressAbbreviation = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4)
         return (
             <li className="nav-item">
-                <Link id="login" className="nav-link btn btn-warning font-weight-bolder" style={{display: "inline-block"}} to="/account">
-                    Account: {addressAbbreviation}
-                </Link>
+                <div className="font-weight-bold text-white" style={{fontSize: "20px", marginTop: "10px"}}>Your Account: {addressAbbreviation}</div>
             </li>
         )
     }
@@ -56,7 +56,7 @@ class AccountNavbarArea extends React.Component {
     renderLoggedOut() {
         return (
             <li className="nav-item">
-                <Link className="nav-link" to="/account">Login</Link>
+                <div className="font-weight-bold text-white" style={{fontSize: "20px", marginTop: "10px"}}>&nbsp;</div>
             </li>
         )
     }

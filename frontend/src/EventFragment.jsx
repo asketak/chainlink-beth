@@ -38,7 +38,7 @@ export default class EventFragment extends React.Component {
         if (force || (!this.state.inited && this.state.event === null && this.context.w3a)) {
             this.setState({inited: true})
 
-            this.context.w3a.contracts.PredictEvent._at(this.props.address).market.call()
+            this.context.w3a.contracts.PredictEvent._at(this.props.address).Event.call()
                 .then(event => {
                     this.setState(state => ({event}))
                 })
@@ -51,11 +51,13 @@ export default class EventFragment extends React.Component {
         const endTimestamp = this.props.endTimestamp
         const endDateString = moment(endTimestamp).format("MMMM D YYYY   kk:mm");
 
-        const description = "This impressive paella is a perfect party dish and a fun meal to cook together with your guests. Add 1 cup of frozen peas along with the mussels, if you like."
-        //const description = this.state.event ? this.state.event.description : "Loading ..."
+        const description = this.state.event ? this.state.event.description
+            .split("\n").map((i, key) => {
+                return <div key={key}>{i}</div>;
+            }) : "Loading ..."
 
         return (
-            <Card raised={true}>
+            <Card raised={true} style={{backgroundColor: this.props.finalized ? "#CFCFCF" : "white"}}>
                 <CardHeader className="event-head"
                             style={{backgroundImage: "linear-gradient(to bottom, rgba(245, 246, 252, 0.52), rgba(117, 19, 93, 0.73)) url('/img/trump1.jpg')"}}
                             title={
@@ -65,13 +67,14 @@ export default class EventFragment extends React.Component {
                                 </div>
                             }
                             subheader={
-                                <Typography variant="body2" color="textSecondary" component="p">{description}</Typography>
+                                <Typography variant="body2" color="textSecondary"
+                                            component="p">{description}</Typography>
                             }
                 />
                 <CardActions className="event-card-action" style={{padding: 0}} disableSpacing>
-                        <Link to={"/events/" + this.props.address}>
-                            <div>Go To Event >>></div>
-                        </Link>
+                    <Link to={"/events/" + this.props.address}>
+                        <div>Go To Event >>></div>
+                    </Link>
                 </CardActions>
             </Card>
         )
