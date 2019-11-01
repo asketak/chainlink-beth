@@ -68,14 +68,16 @@ export default class EventPage extends React.Component {
             authToken
         )
             .then(receipt1 => {
-                this.context.w3a.contracts.PredictEvent._at(this.props.address).finalize2.send(null)
+                console.log("FINALIZED SUCCESS")
+                this.fetchMarkets()
+                /*this.context.w3a.contracts.PredictEvent._at(this.props.address).finalize2.send(null)
                     .catch(e => {
                         debugger
                         this.setState(state => ({finalizing: false}))
                     })
                     .then(receipt2 => {
 
-                    })
+                    })*/
             })
             .catch(e => {
                 debugger
@@ -299,7 +301,7 @@ export default class EventPage extends React.Component {
                                     title={
                                         <div>
                                             <h1>{name}</h1>
-                                            <h5>Ends: {endDateString} in (<RemainingTimeSpan
+                                            <h5>Ends: {endDateString} (<RemainingTimeSpan
                                                 endTimestamp={endTimestamp}/>)</h5>
                                         </div>
                                     }
