@@ -40,7 +40,9 @@ export default class IntroContent extends React.Component {
 
     render() {
         return (
-            <section className="container">
+            <section className="container" style={{textAlign: "center"}}>
+                <div style={{fontSize: "150px", fontWeight: "bold", color: "#2780E3", margin:"30px auto 50px"}}><img src="/logo.png" style={{widtg: "200px", height: "200px"}}/> BETH</div>
+
                 <Link to="/events">
                     <Button style={{
                         display: "block",

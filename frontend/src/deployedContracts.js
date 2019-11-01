@@ -1,6 +1,6 @@
 export default {
 	EventFactory: {
-		address: "0xcb6D145D45A05878D21B937D8f70F0cEA234aC96",
+		address: "0xF3eBa2214FF156B2EF46d6A3e3519c35C9567cFF",
 		"abi": [
 			{
 				"constant": true,

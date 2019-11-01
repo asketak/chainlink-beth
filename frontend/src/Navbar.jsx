@@ -16,7 +16,7 @@ export default class Navbar extends React.Component {
                         <ul className="navbar-nav ml-auto">
                             <li className="nav-item" style={{position: "absolute", left: "47%"}}>
                                 <Link className="nav-link" style={{padding: "0"}} to="/events">
-                                    <button className="btn btn-primary" style={{fontSize: "20px", textDecoration: "underline"}} type="button">Markets</button>
+                                    <button className="btn btn-primary" style={{fontSize: "20px", textDecoration: "underline"}} type="button">Events</button>
                                 </Link>
                             </li>
                             <AccountNavbarArea userAddress={appContext.userAddress}/>

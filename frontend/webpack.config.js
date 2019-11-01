@@ -9,12 +9,16 @@ module.exports = {
 	mode: devMode ? "development" : "production",
 
 	entry: {
-		"bundle.js": [
-			"react-hot-loader/patch",
-			"webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000",
-			"./src/pageInit.js",
-			"./src/adjust.scss"
-		]
+		"bundle.js":
+			devMode ? [
+				"react-hot-loader/patch",
+				"webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000",
+				"./src/pageInit.js",
+				"./src/adjust.scss"
+			] : [
+				"./src/pageInit.js",
+				"./src/adjust.scss"
+			]
 	},
 	output: {
 		path: __dirname + "/public",
