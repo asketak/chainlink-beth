@@ -345,10 +345,10 @@ function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) pu
         finalizer = msg.sender;
         if (now > Event.eventResolutionTimestamp + weekInSeconds // week passed after end of Event
         && !finalized){  // and not finalized
-            doInvalidTransactions();
-            emit logs("invalidated",0);
-            finalized = true;
-            return;
+            // doInvalidTransactions();
+            // emit logs("invalidated",0);
+            // finalized = true;
+            // return;
         }
         getChainlinkResult(auth_token);
     }
@@ -388,15 +388,17 @@ function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) pu
     recordChainlinkFulfillment(_requestId)
     {
         rslt = _result;
-        eventFinalResult = result_to_index(_result); // eventFinalResult is index of Event, that won
-        // if (eventFinalResult != 2**256-1){
-        //     computeWinners();
-        //     sendEtherToWinners();
-        // }
+
     }
 
-    function sendEtherToWinners ()  internal returns(bool res) {
-        require (!finalized);
+    function finalize2 () public {
+            eventFinalResult = result_to_index(rslt); // eventFinalResult is index of Event, that won
+            computeWinners();
+            sendEtherToWinners();
+    }
+    
+
+    function sendEtherToWinners () public returns(bool res) {
         finalized = true;
         
         for(uint x=0; x<addressesToPay.length;x++){
