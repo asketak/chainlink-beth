@@ -356,7 +356,7 @@ function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) pu
 
 
     function getChainlinkResult (string auth_token) public {
-        bytes32 jobId = 0x3334303639626438646463363439356438326165623437663631633261326336;
+        bytes32 jobId = 0x3836313963653230336365623438643238386161323463383861653430346135;
         Shared.ApiRequest storage r = Event.request;
         // newRequest takes a JobID, a callback address, and callback function as input
         
@@ -388,14 +388,13 @@ function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) pu
     recordChainlinkFulfillment(_requestId)
     {
         rslt = _result;
+        eventFinalResult = result_to_index(rslt); // eventFinalResult is index of Event, that won
+        computeWinners();
+        sendEtherToWinners();
+        finalized=true;
 
     }
 
-    function finalize2 () public {
-            eventFinalResult = result_to_index(rslt); // eventFinalResult is index of Event, that won
-            computeWinners();
-            sendEtherToWinners();
-    }
     
 
     function sendEtherToWinners () public returns(bool res) {
