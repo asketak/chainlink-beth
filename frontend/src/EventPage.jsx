@@ -15,6 +15,7 @@ import TextField from '@material-ui/core/TextField';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import Fab from "@material-ui/core/Fab";
 import FastForwardIcon from '@material-ui/icons/FastForward';
+import InputAdornment from "@material-ui/core/InputAdornment";
 
 import AppContext from "./AppContext";
 import RemainingTimeSpan from "./RemainingTimeSpan.jsx";
@@ -91,14 +92,14 @@ export default class EventPage extends React.Component {
     betFunction = (marketId, isBuy) => {
         const sideText = isBuy ? "yes" : "no"
         const price = document.getElementById(sideText + "-price" + marketId).value
-        const amount = document.getElementById(sideText + "-amount" + marketId).value
+        const amount = parseInt(this.context.w3a.utils.toWei(document.getElementById(sideText + "-amount" + marketId).value, "milliether"))
 
         const amountToPay = isBuy ? (price * amount) : ((100 - price) * amount)
 
         this.setState(state => ({marketActionMap: {...state.marketActionMap, [marketId]: true}}))
 
         this.context.w3a.contracts.PredictEvent._at(this.props.address).placeOrder.send(
-            amountToPay * 100000000000000,
+            amountToPay,
             price,
             amount,
             isBuy,
@@ -149,13 +150,13 @@ export default class EventPage extends React.Component {
         PredictEventIntance.finalized.call()
             .then(finalized => this.setState(state => ({finalized})))
 
-        function toOrderViewData(inputData, isBuy) {
+        const toOrderViewData = (inputData, isBuy) => {
             let amountSum = 0
             const orders = inputData
                 .map((amountString, index) => {
                         return {
                             price: index,
-                            amount: parseInt(amountString)
+                            amount: parseInt(this.context.w3a.utils.fromWei(amountString, "milliether"))
                         }
                     }
                 )
@@ -200,7 +201,7 @@ export default class EventPage extends React.Component {
 
                 const orderView = {
                     type: event.returnValues.isBuy ? "YES" : "NO",
-                    amount: parseInt(event.returnValues.amount),
+                    amount: parseInt(this.context.w3a.utils.fromWei(event.returnValues.amount, "milliether")),
                     filled: parseInt(event.returnValues.filled),
                     isBuy: event.returnValues.isBuy,
                     price: parseInt(event.returnValues.price)
@@ -227,7 +228,7 @@ export default class EventPage extends React.Component {
         return (moment().isBefore(this.state.endTimestamp)
                 ? null
                 : this.state.finalized
-                    ? <Typography style={{fontSize: "35px"}}>Winning were paid out!</Typography>
+                    ? <Typography style={{fontSize: "55px"}}>Winnings were paid out!</Typography>
                     : <div>
                         <Button
                             size="large"
@@ -460,6 +461,10 @@ export default class EventPage extends React.Component {
                             InputLabelProps={{
                                 shrink: true,
                             }}
+                            InputProps={{
+                                startAdornment: isBuy ? <InputAdornment position="start">mETH</InputAdornment> : null,
+                                endAdornment: isBuy ? null : <InputAdornment position="end">mETH</InputAdornment>,
+                            }}
                             defaultValue={canWin}
                             margin="normal"
                             variant="outlined"
@@ -471,6 +476,10 @@ export default class EventPage extends React.Component {
                             type="number"
                             InputLabelProps={{
                                 shrink: true,
+                            }}
+                            InputProps={{
+                                startAdornment: isBuy ? <InputAdornment position="start">mETH</InputAdornment> : null,
+                                endAdornment: isBuy ? null : <InputAdornment position="end">mETH</InputAdornment>,
                             }}
                             style={{width: "200px"}}
                             defaultValue={canLose}
@@ -501,6 +510,10 @@ export default class EventPage extends React.Component {
                             type="number"
                             InputLabelProps={{
                                 shrink: true,
+                            }}
+                            InputProps={{
+                                startAdornment: isBuy ? <InputAdornment position="start">mETH</InputAdornment> : null,
+                                endAdornment: isBuy ? null : <InputAdornment position="end">mETH</InputAdornment>,
                             }}
                             defaultValue={1}
                             margin="normal"
