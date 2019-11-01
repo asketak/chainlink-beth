@@ -76,14 +76,31 @@ func (cc *Api) Run(h *bridges.Helper) (interface{}, error) {
 			}
 		}
 
-		err = h.HTTPCallWithOpts(
-			parsed.HttpPostOrGet,
-			parsed.ApiPath,
-			&result,
-			bridges.CallOpts{
-				Query: parsed.PostData,
-			},
-		)
+		if parsed.PostData == nil {
+			// in case of empty post data we should use HTTPCAll which wont parse the response
+			var bytes []byte
+			bytes, err = h.HTTPCallRawWithOpts(
+				parsed.HttpPostOrGet,
+				parsed.ApiPath,
+				bridges.CallOpts{
+					Query: parsed.PostData,
+				},
+			)
+			if err == nil && strings.Contains(string(bytes), "{") {
+				err = json.Unmarshal(bytes, &result)
+			} else if err == nil {
+				result = string(bytes)
+			}
+		} else {
+			err = h.HTTPCallWithOpts(
+				parsed.HttpPostOrGet,
+				parsed.ApiPath,
+				&result,
+				bridges.CallOpts{
+					Query: parsed.PostData,
+				},
+			)
+		}
 	}
 
 	if err != nil {
