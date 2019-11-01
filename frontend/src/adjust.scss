@@ -16,7 +16,10 @@
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    height: 200px;
+  }
+
+  a:hover {
+    text-decoration: none;
   }
 
   .event-card-action {
@@ -28,10 +31,6 @@
       div {
         height: 50px;
         font-size: 1.7rem;
-      }
-
-      &:hover {
-        text-decoration: none;
       }
     }
   }
@@ -61,13 +60,38 @@
 
     &.buy {
       text-align: right;
+
+      .MuiOutlinedInput-notchedOutline {
+        border-color: #85c185;
+      }
+
       input {
+        color: #276012;
         text-align: right;
+        font-size: 20px;
+        font-weight: bold;
+
+        &.Mui-disabled {
+          color: #035903;
+        }
       }
     }
 
     &.sell {
 
+      .MuiOutlinedInput-notchedOutline {
+        border-color: #f0a9a9;
+      }
+
+      input {
+        color: #6f001d;
+        font-size: 20px;
+        font-weight: bold;
+
+        &.Mui-disabled {
+          color: #940001;
+        }
+      }
     }
 
     > div {
@@ -81,6 +105,10 @@
 
     button {
       margin-top: 10px;
+
+      .MuiSvgIcon-root {
+        fill: white;
+      }
     }
   }
 }

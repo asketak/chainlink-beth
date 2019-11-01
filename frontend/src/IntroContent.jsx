@@ -3,6 +3,8 @@ import React from "react"
 import AppContext from "./AppContext.js";
 
 import deployedContracts from "./deployedContracts.js";
+import {Button} from "@material-ui/core";
+import {Link} from "react-router-dom";
 
 export default class IntroContent extends React.Component {
 
@@ -13,7 +15,7 @@ export default class IntroContent extends React.Component {
     state = {
         inited: false,
         addressCount: null,
-		allEvents: []
+        allEvents: []
     }
 
     componentDidMount() {
@@ -28,46 +30,29 @@ export default class IntroContent extends React.Component {
         if (force || (!this.state.inited && this.state.addressCount === null && this.context.w3a)) {
             this.setState({inited: true})
             this.EventFactory = this.context.w3a.contracts.EventFactory.getAllEvents.call()
-				.then(allEvents => {
-					this.setState(state => ({
-						allEvents: allEvents
-					}))
-				})
+                .then(allEvents => {
+                    this.setState(state => ({
+                        allEvents: allEvents
+                    }))
+                })
         }
     }
 
     render() {
         return (
             <section className="container">
-
-                <h2>Popular Markets:</h2>
-                <div className="row">
-                    {this.state.allEvents.map(event => (
-                            <div key={event.add} className="col-lg-4 mb-4">
-                                <div className="card h-100">
-                                    <h4 className="card-header">add: {event.add}</h4>
-                                    <div className="card-body">
-                                        <p className="card-text">timestamp: {event.timestamp}</p>
-                                    </div>
-                                    <div className="card-footer">
-                                        <a href="/markets/address" className="btn btn-primary">Not Impl</a>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    )}
-                </div>
-
-
-                <div className="row">
-                    <form id="test1">
-                        <div className="container">
-                            <div className="row">
-
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                <Link to="/events">
+                    <Button style={{
+                        display: "block",
+                        fontSize: "30px",
+                        fontWeight: "bold",
+                        padding: "30px",
+                        boxShadow: "0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12)",
+                        margin: "0 auto 30px"
+                    }}>
+                        Go To Events
+                    </Button>
+                </Link>
 
             </section>
         )
