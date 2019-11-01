@@ -124,9 +124,9 @@ function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) pu
     require (_EventID < Event.possibleOutcomes.length && _EventID >=0 );
     require (_amount > 0);
     if(_isBuy){
-        require (msg.value > _price * _amount);
+        require (msg.value >= _price * _amount);
         }else{
-            require (msg.value > (100 - _price) * _amount);
+            require (msg.value >= (100 - _price) * _amount);
 
         }
 
