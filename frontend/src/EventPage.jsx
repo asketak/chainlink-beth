@@ -62,7 +62,7 @@ export default class EventPage extends React.Component {
         this.setState(state => ({finalizing: true}))
 
         const authToken = document.getElementById("authKey").value
-        debugger
+        //debugger
         this.context.w3a.contracts.PredictEvent._at(this.props.address).finalize.send(
             null,
             authToken
@@ -227,7 +227,7 @@ export default class EventPage extends React.Component {
         return (moment().isBefore(this.state.endTimestamp)
                 ? null
                 : this.state.finalized
-                    ? <Typography>Winning were paid out!</Typography>
+                    ? <Typography style={{fontSize: "35px"}}>Winning were paid out!</Typography>
                     : <div>
                         <Button
                             size="large"
@@ -351,7 +351,7 @@ export default class EventPage extends React.Component {
             {id: 'time', label: 'Time', minWidth: 60, align: 'left'},
             {id: 'price', label: 'Price', minWidth: 70, align: 'right'},
             {id: 'amount', label: "Amount", minWidth: 40, align: 'right'},
-            {id: 'filled', label: "Filled", minWidth: 40, align: 'right'}
+            {id: 'filled', label: "Limit / Market", minWidth: 40, align: 'right'}
         ];
 
 
@@ -372,7 +372,7 @@ export default class EventPage extends React.Component {
 
                     {this.state.ordersByMarket[index] &&
                     <CardContent>
-                        <h4>My orders:</h4>
+                        <h4>Orders:</h4>
                         <Table stickyHeader size="small" aria-label="sticky table" style={{width: "500px"}}>
                             <TableHead>
                                 <TableRow>
