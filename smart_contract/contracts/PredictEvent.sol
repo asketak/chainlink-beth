@@ -64,7 +64,7 @@ contract PredictEvent is ChainlinkClient {
     uint[] public lowest_limit_sell;
     Shared.Event public Event;
     uint public eventFinalResult;
-    uint public result;
+    uint public rslt;
     bool public finalized;
     bool public initialized;
     mapping (address => uint) public toPay;
@@ -81,73 +81,73 @@ contract PredictEvent is ChainlinkClient {
     address finalizer;
     
     constructor() public {
-              setChainlinkToken(0x20fe562d797a42dcb3399062ae9546cd06f63280);
-    }
-    
-    function showBooks() constant returns(uint[100][2][10] res) {
-        for(uint a =0; a<10;a++){
-            for(uint x =0; x<100;x++){
-                res[a][0][x] = Orderbooks[a][x].unffilledBuys;
-                res[a][1][x] = Orderbooks[a][x].unffilledSells;
-            }
-        }
-        return res;
-    }
+      setChainlinkToken(0x20fe562d797a42dcb3399062ae9546cd06f63280);
+  }
 
-    function showBook(uint a) constant returns(uint[100][2][10] res) {
+  function showBooks() constant returns(uint[100][2][10] res) {
+    for(uint a =0; a<10;a++){
         for(uint x =0; x<100;x++){
             res[a][0][x] = Orderbooks[a][x].unffilledBuys;
             res[a][1][x] = Orderbooks[a][x].unffilledSells;
         }
-        return res;
     }
+    return res;
+}
+
+function showBook(uint a) constant returns(uint[100][2][10] res) {
+    for(uint x =0; x<100;x++){
+        res[a][0][x] = Orderbooks[a][x].unffilledBuys;
+        res[a][1][x] = Orderbooks[a][x].unffilledSells;
+    }
+    return res;
+}
 
 
-    function computeLimits (uint _EventID) constant returns(uint buy, uint sell)  {
-        buy = 0;
-        sell = 100;
-        for(uint x =0; x<100;x++){
-            if(Orderbooks[_EventID][x].unffilledBuys > 0){
-                buy = x;
-            }
-            if(Orderbooks[_EventID][99-x].unffilledSells > 0){
-                sell = 99-x;
-            }
-
+function computeLimits (uint _EventID) constant returns(uint buy, uint sell)  {
+    buy = 0;
+    sell = 100;
+    for(uint x =0; x<100;x++){
+        if(Orderbooks[_EventID][x].unffilledBuys > 0){
+            buy = x;
         }
-        return (buy,sell);
-    }
-    
-
-    function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) public payable {
-        require (_price > 0 && _price < 100);
-        require (_EventID < Event.possibleOutcomes.length && _EventID >=0 );
-        require (_amount > 0);
-        if(_isBuy){
-            require (msg.value > _price * _amount);
-            }else{
-                require (msg.value > (100 - _price) * _amount);
-
-            }
-
-            (highest_limit_buy[_EventID], lowest_limit_sell[_EventID]) =  computeLimits(_EventID);
-            if (_isBuy){
-                emit logs("BUY ORDER",0);
-                placeBuyOrder(_price,_amount,msg.sender,_EventID);
-            }
-            else{
-                emit logs("SELL ORDER",0);
-                placeSellOrder(_price,_amount,msg.sender,_EventID);
-            }
-            (highest_limit_buy[_EventID], lowest_limit_sell[_EventID]) =  computeLimits(_EventID);
-
-            if(deposited[msg.sender] == 0){
-                depositedA.push(msg.sender);
-            }
-            deposited[msg.sender] += msg.value*9/10;  
+        if(Orderbooks[_EventID][99-x].unffilledSells > 0){
+            sell = 99-x;
         }
 
-        function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
+    }
+    return (buy,sell);
+}
+
+
+function placeOrder( uint _price, uint _amount, bool _isBuy, uint _EventID  ) public payable {
+    require (_price > 0 && _price < 100);
+    require (_EventID < Event.possibleOutcomes.length && _EventID >=0 );
+    require (_amount > 0);
+    if(_isBuy){
+        require (msg.value > _price * _amount);
+        }else{
+            require (msg.value > (100 - _price) * _amount);
+
+        }
+
+        (highest_limit_buy[_EventID], lowest_limit_sell[_EventID]) =  computeLimits(_EventID);
+        if (_isBuy){
+            emit logs("BUY ORDER",0);
+            placeBuyOrder(_price,_amount,msg.sender,_EventID);
+        }
+        else{
+            emit logs("SELL ORDER",0);
+            placeSellOrder(_price,_amount,msg.sender,_EventID);
+        }
+        (highest_limit_buy[_EventID], lowest_limit_sell[_EventID]) =  computeLimits(_EventID);
+
+        if(deposited[msg.sender] == 0){
+            depositedA.push(msg.sender);
+        }
+        deposited[msg.sender] += msg.value*9/10;  
+    }
+
+    function placeBuyOrder( uint _price, uint _amount, address _owner, uint result) internal {
         if (_price < lowest_limit_sell[result]) { // Limit buy order
             emit logs("BUY LIMIT ORDER",0);
             Order memory order = Order({
@@ -216,7 +216,7 @@ contract PredictEvent is ChainlinkClient {
                         isBuy : true,
                         filled : 0
                         });
-                emit lord(remaining_amount,matchprice,_owner,0,true,result);
+                    emit lord(remaining_amount,matchprice,_owner,0,true,result);
                     Orderbooks[result][matchprice].BuyOrdersQueue.push(order);
                     Orderbooks[result][matchprice].unffilledBuys +=remaining_amount;
 
@@ -233,7 +233,7 @@ contract PredictEvent is ChainlinkClient {
                 owner : _owner,
                 isBuy : false,
                 price : _price,
-                    marketID : result,
+                marketID : result,
                 filled : 0
                 });
             Orderbooks[result][_price].SellOrdersQueue.push(order);
@@ -289,10 +289,10 @@ contract PredictEvent is ChainlinkClient {
                         owner : _owner,
                         price : matchprice,
                         isBuy : false,
-                    marketID : result,
+                        marketID : result,
                         filled : 0
                         });
-                emit lord(remaining_amount,matchprice,_owner,0,false,result);
+                    emit lord(remaining_amount,matchprice,_owner,0,false,result);
                     Orderbooks[result][matchprice].SellOrdersQueue.push(order);
                     Orderbooks[result][matchprice].unffilledSells +=remaining_amount;
 
@@ -339,17 +339,17 @@ contract PredictEvent is ChainlinkClient {
     
     function finalize(string auth_token) public noReentrancy {
         require (now > Event.eventResolutionTimestamp);
-        // require (!finalized);
+        require (!finalized);
 
 
         finalizer = msg.sender;
-        // if (now > Event.eventResolutionTimestamp + weekInSeconds // week passed after end of Event
-        // && !finalized){  // and not finalized
-        //     doInvalidTransactions();
-        //     emit logs("invalidated",0);
-        //     finalized = true;
-        //     return;
-        // }
+        if (now > Event.eventResolutionTimestamp + weekInSeconds // week passed after end of Event
+        && !finalized){  // and not finalized
+            doInvalidTransactions();
+            emit logs("invalidated",0);
+            finalized = true;
+            return;
+        }
         getChainlinkResult(auth_token);
     }
 
@@ -377,37 +377,18 @@ contract PredictEvent is ChainlinkClient {
 
         sendChainlinkRequestTo(oracleAdd, req, ORACLE_PAYMENT);
     }
+    function evf (uint e) public {
+        eventFinalResult = e;
+    }
     
-  //     function createRequestTo(
-  //   address _oracle,
-  //   bytes32 _jobId,
-  //   uint256 _payment,
-  //   string _url,
-  //   string _path,
-  //   int256 _times
-  // )
-  //   public
-  //   returns (bytes32 requestId)
-  // {
-  //   Chainlink.Request memory req = buildChainlinkRequest(_jobId, this, this.fulfill.selector);
-  //   req.add("url", _url);
-  //   req.add("path", _path);
-  //   req.addInt("times", _times);
-  //   requestId = sendChainlinkRequestTo(_oracle, req, _payment);
-  // }
-
+    
     function fulfill(bytes32 _requestId, uint256 _result)
     public
     // Use recordChainlinkFulfillment to ensure only the requesting oracle can fulfill
     recordChainlinkFulfillment(_requestId)
     {
-        eventFinalResult = _result;
-        // if(CHAINLINKERRORCONST == _result){ // magic constant, means error from api
-        //     emit InvalidChainlinkRequest(finalizer);
-        //     return;
-        // }
-        // result = Shared.bytesToUint(abi.encodePacked(_result));
-        // eventFinalResult = result_to_index(_result); // eventFinalResult is index of Event, that won
+        rslt = _result;
+        eventFinalResult = result_to_index(_result); // eventFinalResult is index of Event, that won
         // if (eventFinalResult != 2**256-1){
         //     computeWinners();
         //     sendEtherToWinners();
@@ -433,11 +414,11 @@ contract PredictEvent is ChainlinkClient {
 
     function substring (string memory what, string memory where)
     internal returns(bool res) {
-     bytes memory whatBytes = bytes (what);
-     bytes memory whereBytes = bytes (where);
+       bytes memory whatBytes = bytes (what);
+       bytes memory whereBytes = bytes (where);
 
-     bool found = false;
-     for (uint i = 0; i < whereBytes.length - whatBytes.length; i++) {
+       bool found = false;
+       for (uint i = 0; i < whereBytes.length - whatBytes.length; i++) {
         bool flag = true;
         for (uint j = 0; j < whatBytes.length; j++)
         if (whereBytes [i + j] != whatBytes [j]) {
@@ -449,7 +430,7 @@ contract PredictEvent is ChainlinkClient {
             break;
         }
     }    
-    }
+}
 
 function bytes32ToStr(bytes32 _bytes32) public pure returns (string) {
 
@@ -465,46 +446,44 @@ function bytes32ToStr(bytes32 _bytes32) public pure returns (string) {
 }
 
 
-function result_to_index (bytes32 _result) internal returns(uint ret) {
-    string memory sResult = bytes32ToStr(_result);
-    uint uResult = uint(_result);
+function result_to_index (uint uResult) internal returns(uint ret) {
 
 
     for(uint x=0;x<Event.possibleOutcomes.length;x++){ // all price levels
         Shared.Outcome storage outcome = Event.possibleOutcomes[x];
-        if(Event.outcomeIsString){
-            if(Event.exactStringMatch && keccak256(outcome.strValue) == keccak256(sResult) ){
-                return x;
-            }
-            if(!Event.exactStringMatch && substring( outcome.strValue, sResult)){
-                return x;
-            }
-            }else{
-                if(outcome.minValue <= uResult && outcome.maxValue >= uResult){
-                    return x;
-                }
-            }
+        if(outcome.minValue <= uResult && outcome.maxValue >= uResult){
+            return x;
         }
-
-        return 2**255-1;
     }
 
+    return 2**255-1;
+}
 
 
-    function computeWinners () internal returns(bool res)  {
-        require (!finalized);
-        Order[] memory queue;
 
-        for(uint outcome=0;outcome<Event.possibleOutcomes.length;outcome++){ 
+function computeWinners () public returns(bool res)  {
+    require (!finalized);
+    Order[] memory queue;
+
+    for(uint outcome=0;outcome<Event.possibleOutcomes.length;outcome++){ 
             for(uint price=0;price<100;price++){ // all price levels
-                ( outcome == eventFinalResult)? queue = Orderbooks[outcome][price].BuyOrdersQueue : queue = Orderbooks[outcome][price].SellOrdersQueue;
+                if(outcome == eventFinalResult){
+                    queue = Orderbooks[outcome][price].BuyOrdersQueue;
+                }else{
+                    queue = Orderbooks[outcome][price].SellOrdersQueue;
+                }
                 for(uint z=0;z<queue.length;z++){
+                    emit logs("queue:z",z );
+                    emit logs("price",price );
+                    emit logs("outcome",outcome );
                     address owner = queue[z].owner;
                     uint amount = queue[z].filled*100;
+                    emit logs("amount",amount );
                     if(toPay[owner] == 0){
                         addressesToPay.push(owner);
                     }
                     toPay[owner]+=amount;
+                    emit lord( amount, price, owner, queue[z].filled, queue[z].isBuy, outcome );
                 }
             }
         }
@@ -522,7 +501,7 @@ function result_to_index (bytes32 _result) internal returns(uint ret) {
     function doInvalidTransactions ()  internal returns(bool res) {
         require (!finalized);
         finalized = true;
-        
+
         for(uint x=0; x<depositedA.length;x++){
             address add = depositedA[x];
             string memory z = toString(add);
