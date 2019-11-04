@@ -112,7 +112,7 @@ export default class Web3Adapter extends EventTarget {
             console.log("Contract send #(" + this.nextActionNumber + "): " + contractMethod._method.name + "(" + JSON.stringify(contractMethod.arguments) + ")")
             const sendParams = {
                 from: this.userAcc,
-                gasPrice: this.gasPrice
+                //gasPrice: this.gasPrice
             }
             if (weiAmount !== null) sendParams.value = weiAmount
 

@@ -47,11 +47,7 @@ contract EventFactory {
         allContracts[allsize] = c;
         allsize = allsize+1;
         
-        address l = 0x20fE562d797A42Dcb3399062AE9546cd06f63280;
-        ERC20(l).transfer(a, 3*10**18);
-        
     } 
-    
 
     function getAddressCount() public constant returns (uint) {
         return allsize;
@@ -65,15 +61,4 @@ contract EventFactory {
         return ret;
     }
 
-}
-
-contract ERC20 {
-    function totalSupply() public constant returns (uint);
-    function balanceOf(address tokenOwner) public constant returns (uint balance);
-    function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
-    function transfer(address to, uint tokens) public returns (bool success);
-    function approve(address spender, uint tokens) public returns (bool success);
-    function transferFrom(address from, address to, uint tokens) public returns (bool success);
-    event Transfer(address indexed from, address indexed to, uint tokens);
-    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
 }

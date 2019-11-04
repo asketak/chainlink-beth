@@ -11,8 +11,8 @@ library Shared {
 
     struct Outcome {
         string name;
-        uint minValue;
         uint maxValue;
+        uint minValue;
         string strValue;
     }
 
