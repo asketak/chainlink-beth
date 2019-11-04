@@ -1,4 +1,3 @@
-
 # Beth 
 
 Beth is a tool for creating prediction markets.
@@ -10,12 +9,19 @@ The creator of market specify:
 - Timestamp, when the request can be sent and market ends.
 - Possible outcomes. These are represented as numerical ranges.
 
-The users can buy and sell of specific outcome. The price per share is between 1-99 gwei.
-If the result of the API call falls into the range of some outcome, that all buyers earn 100gwei per share.
-If the result is the API call is something else, then all short sellers earn 100gwei.
+The users can buy and sell of specific outcome. The price per share is between 1-99 mETH.
+If the result of the API call falls into the range of some outcome, that all buyers earn 100 mETH per share.
+If the result is the API call is something else, then all short sellers earn 100 mETH .
 
 Beth is deployed on ropsten network with frontend on <http://beth.network>
 
+## State of the project
+
+This project is currently deployed on ropsten network.
+Hovewer, it's lacking security features, data aggregation and input validation in current version.
+UI is functional, but could show more information like the amount of winnnings/losses of the user.
+The core functionality, creating markets, adding orders to orderbooks, matching of orders and payouts work as expected.
+We plan to address these issues in future versions.
 
 ## Market lifecycle
 
@@ -64,3 +70,10 @@ If that does not happen for a week after End Date, market is considered invalid 
 -     "apiPath": "http://api.openweathermap.org/data/2.5/forecast",
 -     "getData": "id=524901&APPID=API_KEY_REPLACE",
 -     "jsonRegexString": "list.0.main.temp"
+
+## Finalization of market
+
+After the date of market finalization, user can submit their API key. That api key will replace API_KEY_REPLACE
+string in postData and getData or be used as Oauth2 bearer token when calling twitter api.
+If market doesn't get inalize properly during 168 hours after finalization time, the market will
+return to all users the amount of ETH they bet.
